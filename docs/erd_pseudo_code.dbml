@@ -1,0 +1,162 @@
+// Docs: https://dbml.dbdiagram.io/docs
+
+Table tai_khoan {
+  matk integer [pk, increment]
+  username varchar(255) [not null, unique]
+  password varchar(255) [not null]
+  createdAt timestamp
+  updatedAt timestamp
+}
+
+Table sinh_vien {
+  masv integer [pk, note: "MSSV"]
+  matk integer [unique, not null]
+  hoten varchar(255) [not null]
+  gioi_tinh varchar(15) [note: "vd: Nam, Nu, ..."]
+  email varchar(255) [note: "Email sis"]
+  chuong_trinh varchar(255)
+  truong varchar(255)
+  lop varchar(255)
+  khoa integer [note: "vd: khoa = 69 -> K69"]
+  trang_thai varchar(255) [note: "vd: Hoc, Thoi hoc, ..."]
+  cpa decimal(3, 2) 
+}
+
+Table giang_vien {
+  magv integer [pk]
+  matk integer [unique, not null]
+  hoten varchar(255) [not null]
+  gioi_tinh bool
+  email varchar(255)
+  truong varchar(255)
+}
+
+Table hoc_phan {
+  mahp char(10) [pk]
+  ten varchar(255) [not null]
+  truong varchar(255)
+  bat_buoc bool [default: false]
+  tin_chi_dao_tao integer [default: 0]
+  tin_chi_hoc_phi integer [default: 0]
+  phan_bo char(7) [note: "vd: 3(2-2-0-6)"]
+  noidung text [note: "vd: Tom tat noi dung hoc: Chuong 1..., Chuong 2..."]
+}
+
+// Moi ki hoc se co ma lop trung lap (nhung lop hoc khac nhau)
+Table lop_hoc {
+  malh integer [pk, increment]
+  mahp char(10) [not null]
+  malop char(6) [not null, note: "vd: 172879"]
+  hoc_ky char(5) [not null, note: "vd: 20261"]
+  hoc_ky_phu char(2) [default: "AB"]
+  malh_lt integer [not null, note: "vd: Lop BT phai di kem voi lop LT"]
+  loai char(5) [note: "vd: LT, BT, LT+BT, TN, DA, ..."]
+  trongso_qt decimal(3, 2) [note: "vd: 0.6 -> trong so ck = 0.4"]
+  hinhthuc_giangday char(10) [default: "Offline", note: "vd: Offline, BLearning, ..."]
+
+  indexes {
+    (malop, hoc_ky) [unique] // Mot hoc ky chi co mot ma lop duy nhat
+  }
+}
+
+// Giang vien - Lop hoc
+Table gv_lh {
+  magv integer [not null]
+  malh integer [not null]
+
+  indexes { (magv, malh) [pk] }
+}
+
+Table teacher_assistant {
+  masv integer [not null]
+  malh integer [not null]
+
+  indexes { (masv, malh) [pk] }
+}
+
+Table tiet_hoc {
+  tiet_hoc_so integer [pk, note: "vd: 1, 2, ..."]
+  start_time time [not null]
+  end_time time [not null]
+}
+
+Table lich_hoc {
+  malichhoc integer [pk]
+  malh integer [not null]
+  ngay_trong_tuan integer [not null, note: "vd: thu 2, 3, ..., 7, 8 (chu nhat)"]
+  tiet_bat_dau integer [not null]
+  tiet_ket_thuc integer [not null]
+  dia_diem char(4) [not null, note: "vd: D3-5, TC, SVD, ..."]
+  phong_hoc char(10)
+}
+
+// Neu duoc dung array thi bo table nay, them field "tuan_hoc" (type: array) vao table "lich_hoc"
+Table tuan_hoc {
+  math integer [pk]
+  malichhoc integer [not null]
+  tuan_so integer [note: "1, 2, ..."]
+
+  indexes { (malichhoc, tuan_so) [unique] }
+}
+
+Table diem {
+  madiem integer [pk]
+  masv integer [not null]
+  malh integer [not null]
+  diem_qt decimal(4, 2) [note: "nhieu nhat 4 chu so, 2 chu so sau dau phay"]
+  diem_ck decimal(4, 2)
+  diem_hp char(2) [note: "vd: A, B+"]
+
+  indexes {
+    (masv, malh) [unique]
+  }
+}
+
+Table bai_tap {
+  mabt integer [pk]
+  malh integer [not null]
+  loai varchar(255) [note: "vd: bt lon, kiem tra, thuyet trinh, ..."]
+  noi_dung text [note: "yeu cau dau ra, tieu chi danh gia, ..."]
+  deadline timestamp
+}
+
+Table nhom {
+  manhom integer [pk, increment]
+  mabt integer [not null]
+  de_tai text
+}
+
+// Nhom - Sinh vien
+Table nhom_sv {
+  manhom integer [not null]
+  masv integer [not null]
+
+  indexes {
+    (manhom, masv) [pk]
+  }
+}
+
+
+Ref: sinh_vien.matk - tai_khoan.matk
+Ref: giang_vien.matk - tai_khoan.matk
+
+Ref: diem.masv > sinh_vien.masv 
+Ref: diem.malh > lop_hoc.malh 
+
+Ref: lop_hoc.mahp > hoc_phan.mahp 
+Ref: lop_hoc.malh_lt > lop_hoc.malh
+Ref: gv_lh.malh > lop_hoc.malh
+Ref: gv_lh.magv > giang_vien.magv
+Ref: teacher_assistant.masv > sinh_vien.masv
+Ref: teacher_assistant.malh > lop_hoc.malh
+
+Ref: lich_hoc.malh > lop_hoc.malh
+Ref: lich_hoc.tiet_bat_dau > tiet_hoc.tiet_hoc_so
+Ref: lich_hoc.tiet_ket_thuc > tiet_hoc.tiet_hoc_so
+Ref: tuan_hoc.malichhoc > lich_hoc.malichhoc
+
+Ref: bai_tap.malh > lop_hoc.malh
+Ref: nhom.mabt > bai_tap.mabt
+Ref: nhom_sv.manhom > nhom.manhom
+Ref: nhom_sv.masv > sinh_vien.masv
+

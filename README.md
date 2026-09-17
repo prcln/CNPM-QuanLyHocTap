@@ -24,25 +24,28 @@
 
 ```text
 CNPM - QLHT/
-├── public/                 # Tài nguyên tĩnh
-├── src/
-│   ├── assets/             # Hình ảnh, icons tĩnh
-│   ├── components/
-│   │   └── ui/             # Các UI components từ shadcn/ui
-│   │       ├── badge.tsx
-│   │       ├── button.tsx
-│   │       ├── card.tsx
-│   │       └── input.tsx
-│   ├── lib/
-│   │   └── utils.ts        # Hàm tiện ích cn (clsx + tailwind-merge)
-│   ├── App.tsx             # Giao diện chính (Dashboard QLHT)
-│   ├── index.css           # Cấu hình Tailwind v4 & Biến màu shadcn
-│   └── main.tsx            # Entry point tích hợp QueryClientProvider & Devtools
-├── components.json         # Cấu hình shadcn/ui CLI
-├── package.json            # Danh sách dependencies và npm scripts
-├── tsconfig.json           # Cấu hình TypeScript gốc
-├── tsconfig.app.json       # Cấu hình TypeScript ứng dụng & alias @/*
-└── vite.config.ts          # Cấu hình Vite (@tailwindcss/vite & path alias)
+|-- frontend
+  ├── public/                 # Tài nguyên tĩnh
+  ├── src/
+  │   ├── assets/             # Hình ảnh, icons tĩnh
+  │   ├── components/
+  │   │   └── ui/             # Các UI components từ shadcn/ui
+  │   │       ├── badge.tsx
+  │   │       ├── button.tsx
+  │   │       ├── card.tsx
+  │   │       └── input.tsx
+  │   ├── lib/
+  │   │   └── utils.ts        # Hàm tiện ích cn (clsx + tailwind-merge)
+  │   ├── App.tsx             # Giao diện chính (Dashboard QLHT)
+  │   ├── index.css           # Cấu hình Tailwind v4 & Biến màu shadcn
+  │   └── main.tsx            # Entry point tích hợp QueryClientProvider & Devtools
+  ├── components.json         # Cấu hình shadcn/ui CLI
+  ├── package.json            # Danh sách dependencies và npm scripts
+  ├── tsconfig.json           # Cấu hình TypeScript gốc
+  ├── tsconfig.app.json       # Cấu hình TypeScript ứng dụng & alias @/*
+  └── vite.config.ts          # Cấu hình Vite (@tailwindcss/vite & path alias)
+|-- backend
+|-- docs
 ```
 
 ---
@@ -56,6 +59,7 @@ CNPM - QLHT/
 ### 2. Cài đặt thư viện
 Nếu bạn vừa clone repository về máy:
 ```bash
+cd frontend
 pnpm install
 ```
 
