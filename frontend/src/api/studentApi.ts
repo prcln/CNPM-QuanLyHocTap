@@ -9,7 +9,7 @@ import type {
 } from '@/types/student'
 
 export const studentApi = {
-  // Config & Administration
+  // Config & Administration. TODO: Replace with real stuffs later
   getLatency: (): number => getSimulatedLatency(),
   setLatency: (ms: number): void => setSimulatedLatency(ms),
   resetDatabase: async (): Promise<void> => {
@@ -17,7 +17,7 @@ export const studentApi = {
     mockDb.resetAll()
   },
 
-  // Courses API
+  // Courses basic CRUD API
   courses: {
     getAll: async (filters?: CourseFilters): Promise<Course[]> => {
       await sleep()
@@ -56,7 +56,7 @@ export const studentApi = {
     },
   },
 
-  // Assignments API
+  // Assignments basic CRUD API
   assignments: {
     getAll: async (filters?: AssignmentFilters): Promise<Assignment[]> => {
       await sleep()
