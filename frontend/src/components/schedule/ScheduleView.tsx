@@ -6,11 +6,17 @@ import {
   BookOpen,
   CalendarDays,
   Layers,
+  Flame,
+  ArrowRight,
+  MapPin,
+  Calendar,
 } from 'lucide-react'
+
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useCourses } from '@/hooks/useCourses'
 import { useAssignments } from '@/hooks/useAssignments'
+import { useActivities, useToggleActivityRegistration } from '@/hooks/useActivities'
 import type { DayOfWeek, Course } from '@/types/student'
 
 type ViewMode = 'calendar' | 'detail'
@@ -27,10 +33,15 @@ const JS_DAY_TO_STUDENT_DAY: Record<number, DayOfWeek> = {
   6: 'Saturday',
 }
 
-export function ScheduleView() {
+interface ScheduleViewProps {
+  onNavigateActivities?: () => void
+}
+
+export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
   const { data: courses = [] } = useCourses({ status: 'active' })
   const { data: assignments = [] } = useAssignments()
-
+  const { data: activities = [] } = useActivities()
+  const toggleActivityMutation = useToggleActivityRegistration()
 
   const [activeSubTab, setActiveSubTab] = useState<SubTab>('schedule')
   const [viewMode, setViewMode] = useState<ViewMode>('calendar')
@@ -62,14 +73,10 @@ export function ScheduleView() {
     const firstDayOfMonth = new Date(currentYear, currentMonth, 1)
     const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0)
 
-    // In Vietnam / HUST format: week starts on Monday (T2)
-    // firstDayOfMonth.getDay(): 0 is Sunday, 1 is Monday ...
     let startingDayIndex = firstDayOfMonth.getDay() - 1
     if (startingDayIndex < 0) startingDayIndex = 6 // Sunday is column index 6
 
     const totalDaysInMonth = lastDayOfMonth.getDate()
-
-    // Previous month filler days
     const prevMonthLastDay = new Date(currentYear, currentMonth, 0).getDate()
     const days: { date: Date; isCurrentMonth: boolean; dayNumber: number }[] = []
 
@@ -82,7 +89,6 @@ export function ScheduleView() {
       })
     }
 
-    // Current month days
     for (let d = 1; d <= totalDaysInMonth; d++) {
       days.push({
         date: new Date(currentYear, currentMonth, d),
@@ -91,7 +97,6 @@ export function ScheduleView() {
       })
     }
 
-    // Next month filler days to complete 35 or 42 grid cells
     const remaining = (7 - (days.length % 7)) % 7
     for (let d = 1; d <= remaining; d++) {
       days.push({
@@ -121,6 +126,20 @@ export function ScheduleView() {
     return coursesByDayOfWeek.get(dayOfWeek) || []
   }
 
+  // Format date string YYYY-MM-DD
+  const formatDateStr = (date: Date): string => {
+    const y = date.getFullYear()
+    const m = String(date.getMonth() + 1).padStart(2, '0')
+    const d = String(date.getDate()).padStart(2, '0')
+    return `${y}-${m}-${d}`
+  }
+
+  // Get activities on a specific date
+  const getActivitiesForDate = (date: Date) => {
+    const dateStr = formatDateStr(date)
+    return activities.filter((a) => a.date === dateStr)
+  }
+
   // Check if date is today (19/09/2026 or real today)
   const isToday = (date: Date) => {
     return (
@@ -142,9 +161,10 @@ export function ScheduleView() {
   // Classes for the currently selected date
   const selectedDayOfWeek = JS_DAY_TO_STUDENT_DAY[selectedDate.getDay()]
   const selectedDayCourses = coursesByDayOfWeek.get(selectedDayOfWeek) || []
+  const selectedDayActivities = getActivitiesForDate(selectedDate)
 
-  // Check if selected date has any deadline
-  const selectedDateStr = selectedDate.toISOString().split('T')[0]
+  // Deadlines on selected date
+  const selectedDateStr = formatDateStr(selectedDate)
   const selectedDayAssignments = assignments.filter((a) =>
     a.dueDate.startsWith(selectedDateStr)
   )
@@ -160,7 +180,7 @@ export function ScheduleView() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Top Tabs - HUST Style: [Thời khoá biểu] [Lớp trợ giảng] [Sách giáo trình] */}
       <div className="flex items-center gap-8 border-b border-border/80 text-sm font-semibold">
         <button
@@ -306,7 +326,9 @@ export function ScheduleView() {
                 <div className="grid grid-cols-7 gap-y-2 text-center text-sm">
                   {calendarDays.map((cell, idx) => {
                     const dayCourses = getCoursesForDate(cell.date)
+                    const dayActs = getActivitiesForDate(cell.date)
                     const hasClass = dayCourses.length > 0
+                    const hasActivity = dayActs.length > 0
                     const selected = isSelected(cell.date)
                     const today = isToday(cell.date)
 
@@ -331,7 +353,7 @@ export function ScheduleView() {
                           {cell.dayNumber}
                         </div>
 
-                        {/* Yellow / Orange dot indicator for classes */}
+                        {/* Dot indicators: Yellow for class, Purple/Red for Extracurricular */}
                         <div className="h-2 flex items-center justify-center gap-0.5 mt-0.5">
                           {hasClass && (
                             <span
@@ -341,8 +363,13 @@ export function ScheduleView() {
                               title={`${dayCourses.length} môn học`}
                             />
                           )}
-                          {dayCourses.length > 1 && (
-                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          {hasActivity && (
+                            <span
+                              className={`w-1.5 h-1.5 rounded-full ${
+                                selected ? 'bg-purple-300' : 'bg-purple-600 dark:bg-purple-400'
+                              }`}
+                              title={`${dayActs.length} hoạt động ngoại khóa`}
+                            />
                           )}
                         </div>
                       </div>
@@ -351,17 +378,21 @@ export function ScheduleView() {
                 </div>
 
                 {/* Legend caption */}
-                <div className="pt-4 border-t border-border/60 flex items-center justify-center gap-5 text-xs text-muted-foreground">
+                <div className="pt-4 border-t border-border/60 flex flex-wrap items-center justify-center gap-4 text-xs text-muted-foreground">
                   <div className="flex items-center gap-1.5">
                     <span className="w-2 h-2 rounded-full bg-amber-500 inline-block" />
-                    <span>Có lịch học</span>
+                    <span>Lịch học</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-4 h-4 rounded-full bg-red-700 inline-block" />
+                    <span className="w-2 h-2 rounded-full bg-purple-600 dark:bg-purple-400 inline-block" />
+                    <span>Sự kiện ngoại khóa</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-3.5 h-3.5 rounded-full bg-red-700 inline-block" />
                     <span>Đang chọn</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-4 h-4 rounded-full border border-red-600 inline-block" />
+                    <span className="w-3.5 h-3.5 rounded-full border border-red-600 inline-block" />
                     <span>Hôm nay</span>
                   </div>
                 </div>
@@ -379,15 +410,15 @@ export function ScheduleView() {
                   </p>
                 </div>
 
-                {/* Course List on Selected Day */}
-                {selectedDayCourses.length === 0 ? (
+                {/* 1. Course List on Selected Day */}
+                {selectedDayCourses.length === 0 && selectedDayActivities.length === 0 ? (
                   <div className="py-16 text-center space-y-3">
                     <div className="w-12 h-12 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto text-muted-foreground/60">
                       <BookOpen className="h-6 w-6" />
                     </div>
                     <div className="space-y-1">
                       <p className="font-semibold text-sm text-foreground">
-                        Không có lịch học trong ngày này
+                        Không có lịch học hoặc sự kiện trong ngày này
                       </p>
                       <p className="text-xs text-muted-foreground max-w-sm mx-auto">
                         Bạn có thể dành thời gian để tự học, ôn bài hoặc hoàn thành các bài tập và deadline sắp tới.
@@ -396,8 +427,8 @@ export function ScheduleView() {
                   </div>
                 ) : (
                   <div className="space-y-4">
+                    {/* Academic classes */}
                     {selectedDayCourses.map((course) => {
-                      // Parse timeslot or fallback
                       const timeParts = course.schedule.timeSlot.split('-')
                       const startTime = timeParts[0]?.trim() || '10:15'
                       const endTime = timeParts[1]?.trim() || '11:45'
@@ -417,7 +448,6 @@ export function ScheduleView() {
 
                             {/* Right: Course details */}
                             <div className="col-span-9 sm:col-span-10 space-y-2">
-                              {/* Class code & Name in bold red HUST style */}
                               <h4 className="font-bold text-sm sm:text-base text-red-700 dark:text-red-500 leading-snug">
                                 {course.code} - {course.name}
                               </h4>
@@ -454,10 +484,52 @@ export function ScheduleView() {
                         </div>
                       )
                     })}
+
+                    {/* Extracurricular activities on this date */}
+                    {selectedDayActivities.length > 0 && (
+                      <div className="pt-2 space-y-3">
+                        <div className="flex items-center gap-2 text-xs font-bold text-purple-700 dark:text-purple-400">
+                          <Flame className="h-4 w-4" />
+                          <span>Hoạt động ngoại khóa & Săn ĐRL trong ngày ({selectedDayActivities.length})</span>
+                        </div>
+
+                        {selectedDayActivities.map((act) => (
+                          <div
+                            key={act.id}
+                            className="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 flex items-center justify-between gap-3"
+                          >
+                            <div className="space-y-1">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-sm text-foreground">{act.title}</span>
+                                <Badge className="bg-red-600 text-white text-[10px] font-bold">
+                                  +{act.drlPoints} ĐRL
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-muted-foreground">
+                                {act.time} • {act.location} • Tổ chức: {act.organizer}
+                              </p>
+                            </div>
+
+                            <Button
+                              size="sm"
+                              variant={act.registered ? 'secondary' : 'default'}
+                              onClick={() => toggleActivityMutation.mutate(act.id)}
+                              className={`rounded-lg text-xs font-semibold h-8 shrink-0 ${
+                                act.registered
+                                  ? 'border border-emerald-500/40 text-emerald-600'
+                                  : 'bg-purple-600 hover:bg-purple-700 text-white'
+                              }`}
+                            >
+                              {act.registered ? '✓ Đã lưu lịch' : 'Đăng ký'}
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* Optional: Show deadline if due on this date */}
+                {/* Deadlines notice if any */}
                 {selectedDayAssignments.length > 0 && (
                   <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/5 space-y-2">
                     <div className="flex items-center gap-2 text-xs font-bold text-amber-700 dark:text-amber-400">
@@ -537,6 +609,93 @@ export function ScheduleView() {
               </div>
             </div>
           )}
+
+          {/* 4. TÍCH HỢP SỰ KIỆN NGOẠI KHÓA & HOẠT ĐỘNG RÈN LUYỆN BÊN DƯỚI THỜI KHÓA BIỂU */}
+          <div className="rounded-2xl border border-border/80 bg-card p-6 sm:p-8 shadow-xs space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <Flame className="h-5 w-5 text-red-600" />
+                  <h3 className="text-lg font-bold text-foreground">
+                    Sự Kiện Ngoại Khóa & Hoạt Động Rèn Luyện Sắp Tới
+                  </h3>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Đối chiếu lịch học để đăng ký tham gia săn Điểm Rèn Luyện (ĐRL) không bị trùng ca học
+                </p>
+              </div>
+
+              {onNavigateActivities && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={onNavigateActivities}
+                  className="rounded-xl text-xs font-semibold gap-1.5 self-start sm:self-auto border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40"
+                >
+                  <span>Mở Trang Hoạt Động & Săn ĐRL</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              )}
+            </div>
+
+            {/* Activities Preview Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {activities.slice(0, 3).map((act) => (
+                <div
+                  key={act.id}
+                  className="p-4 rounded-xl border border-border/70 bg-muted/20 hover:bg-card hover:border-red-700/40 transition-all space-y-3 flex flex-col justify-between"
+                >
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-red-600/10 text-red-700 dark:text-red-400 border border-red-600/20">
+                        +{act.drlPoints} ĐRL
+                      </span>
+                      <span className="text-[11px] text-muted-foreground font-medium">
+                        {act.registeredCount} SV đã đăng ký
+                      </span>
+                    </div>
+
+                    <h4 className="font-bold text-sm text-foreground line-clamp-2">
+                      {act.title}
+                    </h4>
+
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5 text-red-600" />
+                        <span>
+                          {new Date(act.date).toLocaleDateString('vi-VN', {
+                            weekday: 'short',
+                            day: 'numeric',
+                            month: 'numeric',
+                          })}
+                          {' • '}{act.time}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="h-3.5 w-3.5 text-muted-foreground/70" />
+                        <span className="truncate">{act.location}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-border/50 flex items-center justify-between">
+                    <Button
+                      variant={act.registered ? 'secondary' : 'default'}
+                      size="sm"
+                      onClick={() => toggleActivityMutation.mutate(act.id)}
+                      className={`w-full rounded-lg text-xs font-semibold h-8 ${
+                        act.registered
+                          ? 'border border-emerald-500/40 text-emerald-600'
+                          : 'bg-red-700 hover:bg-red-800 text-white'
+                      }`}
+                    >
+                      {act.registered ? '✓ Đã lưu vào lịch' : 'Đăng ký tham gia'}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </>
       )}
     </div>

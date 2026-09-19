@@ -9,11 +9,12 @@ import {
   ChevronRight,
   ExternalLink,
   UserCheck,
+  Flame,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 
-export type PortalTab = 'overview' | 'courses' | 'assignments' | 'grades' | 'schedule'
+export type PortalTab = 'overview' | 'courses' | 'assignments' | 'grades' | 'schedule' | 'activities'
 
 interface SidebarProps {
   activeTab: PortalTab
@@ -67,7 +68,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
       icon: Calendar,
       badge: null,
     },
+    {
+      id: 'activities' as const,
+      label: 'Hoạt Động & Săn ĐRL',
+      icon: Flame,
+      badge: null,
+    },
   ]
+
 
   return (
     <aside
