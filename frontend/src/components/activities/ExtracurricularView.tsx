@@ -283,7 +283,6 @@ export function ExtracurricularView() {
           {filteredActivities.map((act) => {
             const catInfo = categoryConfig[act.category]
             const isReg = act.registered
-            const isPast = new Date(act.date).getTime() < new Date(2026, 8, 19).getTime()
 
             return (
               <Card
@@ -368,12 +367,13 @@ export function ExtracurricularView() {
                       variant={isReg ? 'secondary' : 'default'}
                       size="sm"
                       onClick={() => toggleRegistrationMutation.mutate(act.id)}
-                      disabled={toggleRegistrationMutation.isPending || isPast}
+                      disabled={toggleRegistrationMutation.isPending}
                       className={`flex-1 rounded-xl text-xs font-semibold h-9 transition-colors ${
                         isReg
                           ? 'border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600'
                           : 'bg-red-700 hover:bg-red-800 text-white shadow-xs'
                       }`}
+                      title={isReg ? 'Bấm để hủy đăng ký' : 'Bấm để đăng ký'}
                     >
                       {isReg ? (
                         <span className="flex items-center gap-1.5">
@@ -490,6 +490,7 @@ export function ExtracurricularView() {
 
               <Button
                 size="sm"
+                disabled={toggleRegistrationMutation.isPending}
                 onClick={() => {
                   toggleRegistrationMutation.mutate(activeModalActivity.id)
                   setActiveModalActivity((prev) => (prev ? { ...prev, registered: !prev.registered } : null))

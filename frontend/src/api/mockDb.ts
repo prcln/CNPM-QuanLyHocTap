@@ -65,7 +65,16 @@ const loadDb = (): DbSchema => {
       return inMemoryDb
     }
     const parsed = JSON.parse(raw) as DbSchema
-    if (!parsed.activities) parsed.activities = [...INITIAL_ACTIVITIES]
+    if (!parsed.activities) {
+      parsed.activities = [...INITIAL_ACTIVITIES]
+    } else {
+      parsed.activities = parsed.activities.map((a) => {
+        if (a.id === 'act-4' && a.date === '2026-09-18') {
+          return { ...a, date: '2026-09-26' }
+        }
+        return a
+      })
+    }
     if (!parsed.drlSummary) parsed.drlSummary = { ...INITIAL_DRL_SUMMARY }
     return parsed
   } catch (err) {
@@ -391,10 +400,11 @@ export const mockDb = {
 
     db.activities[index] = updated
 
-    // Update DRL points
-    let totalDrl = INITIAL_DRL_SUMMARY.totalDrl
+    // Update DRL points dynamically based on registered and attended activities
+    const baseDrl = 58
+    let totalDrl = baseDrl
     db.activities.forEach((a) => {
-      if (a.attended) totalDrl += a.drlPoints
+      if (a.registered || a.attended) totalDrl += a.drlPoints
     })
     totalDrl = Math.min(100, Math.max(0, totalDrl))
     const rank = totalDrl >= 90 ? 'Xuất sắc' : totalDrl >= 80 ? 'Tốt' : totalDrl >= 65 ? 'Khá' : 'Trung bình'

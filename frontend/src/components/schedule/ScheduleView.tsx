@@ -682,14 +682,16 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                     <Button
                       variant={act.registered ? 'secondary' : 'default'}
                       size="sm"
+                      disabled={toggleActivityMutation.isPending}
                       onClick={() => toggleActivityMutation.mutate(act.id)}
-                      className={`w-full rounded-lg text-xs font-semibold h-8 ${
+                      className={`w-full rounded-lg text-xs font-semibold h-8 transition-colors ${
                         act.registered
-                          ? 'border border-emerald-500/40 text-emerald-600'
+                          ? 'border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600'
                           : 'bg-red-700 hover:bg-red-800 text-white'
                       }`}
+                      title={act.registered ? 'Bấm để hủy đăng ký' : 'Bấm để đăng ký tham gia'}
                     >
-                      {act.registered ? '✓ Đã lưu vào lịch' : 'Đăng ký tham gia'}
+                      {act.registered ? '✓ Đã lưu (Hủy)' : 'Đăng ký tham gia'}
                     </Button>
                   </div>
                 </div>
