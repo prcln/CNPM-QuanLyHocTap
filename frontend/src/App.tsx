@@ -9,10 +9,12 @@ import { CourseList } from '@/components/courses/CourseList'
 import { AssignmentList } from '@/components/assignments/AssignmentList'
 import { GradeTracker } from '@/components/grades/GradeTracker'
 import { ScheduleView } from '@/components/schedule/ScheduleView'
+import { ExtracurricularView } from '@/components/activities/ExtracurricularView'
 import { MockApiControlBar } from '@/components/shared/MockApiControlBar'
 import { useStudyStats } from '@/hooks/useStudyStats'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, CheckSquare, Award, Calendar, LayoutDashboard } from 'lucide-react'
+import { BookOpen, CheckSquare, Award, Calendar, LayoutDashboard, Flame } from 'lucide-react'
+
 
 export default function App() {
   const [view, setView] = useState<'landing' | 'portal'>('portal')
@@ -76,8 +78,13 @@ export default function App() {
     },
     schedule: {
       title: 'Thời Khóa Biểu Tuần',
-      subtitle: 'Lưới hiển thị lịch học theo ngày và ca học trong tuần, phân màu trực quan theo môn',
+      subtitle: 'Lưới hiển thị lịch học theo ngày và ca học trong tuần chuẩn QLĐT Bách Khoa HUST',
       icon: Calendar,
+    },
+    activities: {
+      title: 'Hoạt Động Ngoại Khóa & Săn ĐRL',
+      subtitle: 'Theo dõi sự kiện Đoàn - Hội, đăng ký tham gia và săn Điểm Rèn Luyện (ĐRL) chuẩn CTSV',
+      icon: Flame,
     },
   }
 
@@ -156,7 +163,10 @@ export default function App() {
               {activeTab === 'courses' && <CourseList />}
               {activeTab === 'assignments' && <AssignmentList />}
               {activeTab === 'grades' && <GradeTracker />}
-              {activeTab === 'schedule' && <ScheduleView />}
+              {activeTab === 'schedule' && (
+                <ScheduleView onNavigateActivities={() => setActiveTab('activities')} />
+              )}
+              {activeTab === 'activities' && <ExtracurricularView />}
             </div>
           </main>
         </div>
@@ -164,3 +174,4 @@ export default function App() {
     </div>
   )
 }
+

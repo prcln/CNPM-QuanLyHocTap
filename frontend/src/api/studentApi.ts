@@ -7,7 +7,11 @@ import type {
   StudyStats,
   CourseFilters,
   AssignmentFilters,
+  ExtracurricularActivity,
+  DrlSummary,
+  ActivityCategory,
 } from '@/types/student'
+
 
 export const studentApi = {
   // Config & Administration
@@ -234,4 +238,26 @@ export const studentApi = {
       return mockDb.getStats()
     },
   },
+
+  // Extracurricular Activities & DRL API
+  activities: {
+    getAll: async (
+      category?: ActivityCategory | 'all',
+      registeredOnly?: boolean
+    ): Promise<ExtracurricularActivity[]> => {
+      await sleep()
+      return mockDb.getActivities(category, registeredOnly)
+    },
+
+    toggleRegister: async (id: string): Promise<ExtracurricularActivity> => {
+      await sleep()
+      return mockDb.toggleActivityRegistration(id)
+    },
+
+    getDrlSummary: async (): Promise<DrlSummary> => {
+      await sleep()
+      return mockDb.getDrlSummary()
+    },
+  },
 }
+
