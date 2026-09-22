@@ -1,3 +1,4 @@
+type RoleType = "SV" | "GV" | "AD";
 type GioiTinhType = "Nam" | "Nu";
 type LoaiLopHocType = "LT" | "BT" | "LT+BT" | "TN" | "DA";
 type HocKyPhuType = "A" | "B" | "AB";
@@ -8,8 +9,11 @@ export interface ITaiKhoan {
     matk: number;
     username: string;
     password: string;
-    createdAt?: Date;
-    updatedAt?: Date;
+    role: RoleType;
+    created_at?: Date;
+    updated_at?: Date;
+    deleted_at?: Date;
+    deleted_by?: number;
 }
 
 export interface ISinhVien {
@@ -23,6 +27,7 @@ export interface ISinhVien {
     lop?: string;
     khoa?: number;
     trang_thai?: string;
+    cpa?: number;
 }
 
 export interface IGiangVien {
@@ -38,9 +43,9 @@ export interface IHocPhan {
     mahp: string;
     ten: string;
     truong?: string;
-    bat_buoc?: boolean;
-    tin_chi_dao_tao?: number;
-    tin_chi_hoc_phi?: number;
+    bat_buoc: boolean;
+    tin_chi_dao_tao: number;
+    tin_chi_hoc_phi: number;
     phan_bo?: string;
     noidung?: string;
 }
@@ -50,15 +55,25 @@ export interface ILopHoc {
     mahp: string;
     malop: string;
     hoc_ky: string;
-    hoc_ky_phu?: HocKyPhuType;
+    hoc_ky_phu: HocKyPhuType;
     malh_lt?: number;
-    loai?: LoaiLopHocType;
-    trongso_qt?: number;
-    hinhthuc_giangday?: HinhThucGiangDayType;
+    loai: LoaiLopHocType;
+    trongso_qt: number;
+    hinhthuc_giangday: HinhThucGiangDayType;
+}
+
+export interface ISvLh {
+    masv: number;
+    malh: number;
 }
 
 export interface IGvLh {
     magv: number;
+    malh: number;
+}
+
+export interface ITeacherAssistant {
+    masv: number;
     malh: number;
 }
 
@@ -75,13 +90,13 @@ export interface ILichHoc {
     tiet_bat_dau: number;
     tiet_ket_thuc: number;
     dia_diem: string;
-    phong_hoc?: string;
+    phong_hoc: string;
 }
 
 export interface ITuanHoc {
     math: number;
     malichhoc: number;
-    tuan_so?: number;
+    tuan_so: number;
 }
 
 export interface IDiem {
@@ -90,8 +105,6 @@ export interface IDiem {
     malh: number;
     diem_qt?: number;
     diem_ck?: number;
-    diem_hp_chu?: string;
-    diem_hp_so?: number;
 }
 
 export interface IBaiTap {

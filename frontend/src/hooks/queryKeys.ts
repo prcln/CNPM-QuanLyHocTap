@@ -29,6 +29,9 @@ export const studentQueryKeys = {
     all: ['stats'] as const,
     overview: () => [...studentQueryKeys.stats.all, 'overview'] as const,
   },
+<<<<<<< HEAD
+}
+=======
 
   // Activities & DRL keys
   activities: {
@@ -39,3 +42,4 @@ export const studentQueryKeys = {
   },
 }
 
+>>>>>>> develop

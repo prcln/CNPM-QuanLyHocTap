@@ -1,44 +1,2070 @@
 openapi: 3.0.3
 
 info:
-    title: LMS API
-    description: API cho hệ thống quản lý học tập
-    version: 1.0.0
+  title: LMS API
+  description: API cho hệ thống quản lý học tập
+  version: 1.0.0
 
 servers:
-    - url: /api/v1
+  - url: /api/v1
+    description: API v1
+
+tags:
+  - name: Auth
+    description: Xác thực và đăng nhập
+  - name: Accounts
+    description: Quản lý tài khoản
+  - name: Students
+    description: Quản lý sinh viên
+  - name: Lecturers
+    description: Quản lý giảng viên
+  - name: Courses
+    description: Quản lý học phần
+  - name: Classes
+    description: Quản lý lớp học
+  - name: Grades
+    description: Quản lý điểm
+  - name: Schedule
+    description: Quản lý lịch học
+  - name: Assignments
+    description: Quản lý bài tập
+  - name: Groups
+    description: Quản lý nhóm bài tập
 
 paths:
-    /auth/login:
-        post:
-            summary: Đăng nhập
-            tags:
-                - Tài khoản
-            requestBody:
-                required: true
-                content:
-                    application/json:
-                        schema:
-                            $ref: "#/components/schemas/LoginRequest"
 
-            responses:
-                "200":
-                    description: Đăng nhập thành công
-                "401":
-                    description: Sai username hoặc password
+  # ============================================================
+  # AUTH
+  # ============================================================
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Đăng nhập
+      description: Đăng nhập bằng username và password.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Đăng nhập thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Đăng xuất
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Đăng xuất thành công
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ============================================================
+  # ACCOUNTS
+  # ============================================================
+
+  /accounts/me:
+    get:
+      tags: [Accounts]
+      summary: Lấy tài khoản hiện tại
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thông tin tài khoản
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /accounts:
+    get:
+      tags: [Accounts]
+      summary: Danh sách tài khoản
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách tài khoản
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Account'
+
+    post:
+      tags: [Accounts]
+      summary: Tạo tài khoản
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountCreate'
+      responses:
+        '201':
+          description: Tạo tài khoản thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /accounts/{matk}:
+    parameters:
+      - $ref: '#/components/parameters/matk'
+
+    get:
+      tags: [Accounts]
+      summary: Lấy tài khoản theo ID
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thông tin tài khoản
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Accounts]
+      summary: Cập nhật tài khoản
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AccountUpdate'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+
+    delete:
+      tags: [Accounts]
+      summary: Soft delete tài khoản
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Xóa tài khoản thành công
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ============================================================
+  # STUDENTS
+  # ============================================================
+
+  /students:
+    get:
+      tags: [Students]
+      summary: Danh sách sinh viên
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách sinh viên
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Student'
+
+    post:
+      tags: [Students]
+      summary: Tạo sinh viên
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentCreate'
+      responses:
+        '201':
+          description: Tạo sinh viên thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+
+  /students/me:
+    get:
+      tags: [Students]
+      summary: Thông tin sinh viên hiện tại
+      x-roles: [SV]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thông tin sinh viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+
+    put:
+      tags: [Students]
+      summary: Cập nhật thông tin cá nhân
+      x-roles: [SV]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentSelfUpdate'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+
+  /students/{masv}:
+    parameters:
+      - $ref: '#/components/parameters/masv'
+
+    get:
+      tags: [Students]
+      summary: Lấy thông tin sinh viên
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thông tin sinh viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    put:
+      tags: [Students]
+      summary: Cập nhật sinh viên
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StudentUpdate'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Student'
+
+    delete:
+      tags: [Students]
+      summary: Xóa sinh viên
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Xóa thành công
+
+  /students/me/classes:
+    get:
+      tags: [Students]
+      summary: Các lớp của sinh viên hiện tại
+      x-roles: [SV]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách lớp
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Class'
+
+  /students/me/grades:
+    get:
+      tags: [Grades]
+      summary: Xem điểm của bản thân
+      x-roles: [SV]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách điểm
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Grade'
+
+  /students/me/grades/{malh}:
+    get:
+      tags: [Grades]
+      summary: Xem điểm của bản thân trong một lớp
+      x-roles: [SV]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/malh'
+      responses:
+        '200':
+          description: Điểm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+
+  /students/{masv}/grades:
+    get:
+      tags: [Grades]
+      summary: Xem điểm của sinh viên
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/masv'
+      responses:
+        '200':
+          description: Danh sách điểm
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Grade'
+
+  /students/me/gpa:
+    get:
+      tags: [Grades]
+      summary: GPA theo học kỳ
+      x-roles: [SV]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: GPA theo học kỳ
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GpaItem'
+
+  /students/me/cpa:
+    get:
+      tags: [Grades]
+      summary: CPA hiện tại
+      x-roles: [SV]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: CPA
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cpa:
+                    type: number
+                    format: double
+                    nullable: true
+
+  /students/me/schedule:
+    get:
+      tags: [Schedule]
+      summary: Thời khóa biểu của sinh viên hiện tại
+      x-roles: [SV]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thời khóa biểu
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Schedule'
+
+  /students/{masv}/schedule:
+    get:
+      tags: [Schedule]
+      summary: Thời khóa biểu của sinh viên
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/masv'
+      responses:
+        '200':
+          description: Thời khóa biểu
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Schedule'
+
+  # ============================================================
+  # LECTURERS
+  # ============================================================
+
+  /lecturers:
+    get:
+      tags: [Lecturers]
+      summary: Danh sách giảng viên
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách giảng viên
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Lecturer'
+
+    post:
+      tags: [Lecturers]
+      summary: Tạo giảng viên
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LecturerCreate'
+      responses:
+        '201':
+          description: Tạo giảng viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lecturer'
+
+  /lecturers/me:
+    get:
+      tags: [Lecturers]
+      summary: Thông tin giảng viên hiện tại
+      x-roles: [GV]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thông tin giảng viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lecturer'
+
+    put:
+      tags: [Lecturers]
+      summary: Cập nhật thông tin cá nhân
+      x-roles: [GV]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LecturerSelfUpdate'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lecturer'
+
+  /lecturers/me/classes:
+    get:
+      tags: [Lecturers]
+      summary: Các lớp đang phụ trách
+      x-roles: [GV]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách lớp
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Class'
+
+  /lecturers/me/schedule:
+    get:
+      tags: [Schedule]
+      summary: Lịch giảng dạy của giảng viên hiện tại
+      x-roles: [GV]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lịch giảng dạy
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Schedule'
+
+  /lecturers/{magv}:
+    parameters:
+      - $ref: '#/components/parameters/magv'
+
+    get:
+      tags: [Lecturers]
+      summary: Chi tiết giảng viên
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thông tin giảng viên
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lecturer'
+
+    put:
+      tags: [Lecturers]
+      summary: Cập nhật giảng viên
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LecturerUpdate'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Lecturer'
+
+    delete:
+      tags: [Lecturers]
+      summary: Xóa giảng viên
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Xóa thành công
+
+  # ============================================================
+  # COURSES
+  # ============================================================
+
+  /courses:
+    get:
+      tags: [Courses]
+      summary: Danh sách học phần
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách học phần
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Course'
+
+    post:
+      tags: [Courses]
+      summary: Tạo học phần
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseCreate'
+      responses:
+        '201':
+          description: Tạo học phần
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+
+  /courses/{mahp}:
+    parameters:
+      - $ref: '#/components/parameters/mahp'
+
+    get:
+      tags: [Courses]
+      summary: Chi tiết học phần
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Học phần
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+
+    put:
+      tags: [Courses]
+      summary: Cập nhật học phần
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CourseUpdate'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Course'
+
+    delete:
+      tags: [Courses]
+      summary: Xóa học phần
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Xóa thành công
+
+  # ============================================================
+  # CLASSES
+  # ============================================================
+
+  /classes:
+    get:
+      tags: [Classes]
+      summary: Danh sách lớp học
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Danh sách lớp học
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Class'
+
+    post:
+      tags: [Classes]
+      summary: Tạo lớp học
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassCreate'
+      responses:
+        '201':
+          description: Tạo lớp
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+
+  /classes/{malh}:
+    parameters:
+      - $ref: '#/components/parameters/malh'
+
+    get:
+      tags: [Classes]
+      summary: Chi tiết lớp học
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lớp học
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+
+    put:
+      tags: [Classes]
+      summary: Cập nhật lớp học
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ClassUpdate'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Class'
+
+    delete:
+      tags: [Classes]
+      summary: Xóa lớp học
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Xóa thành công
+
+  /classes/{malh}/students:
+    get:
+      tags: [Classes]
+      summary: Danh sách sinh viên trong lớp
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/malh'
+      responses:
+        '200':
+          description: Danh sách sinh viên
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Student'
+
+  /classes/{malh}/students/{masv}:
+    parameters:
+      - $ref: '#/components/parameters/malh'
+      - $ref: '#/components/parameters/masv'
+
+    post:
+      tags: [Classes]
+      summary: Thêm sinh viên vào lớp
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Thêm thành công
+
+    delete:
+      tags: [Classes]
+      summary: Xóa sinh viên khỏi lớp
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Xóa thành công
+
+  /classes/{malh}/lecturers:
+    get:
+      tags: [Classes]
+      summary: Danh sách giảng viên của lớp
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/malh'
+      responses:
+        '200':
+          description: Danh sách giảng viên
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Lecturer'
+
+  /classes/{malh}/lecturers/{magv}:
+    parameters:
+      - $ref: '#/components/parameters/malh'
+      - $ref: '#/components/parameters/magv'
+
+    post:
+      tags: [Classes]
+      summary: Gán giảng viên vào lớp
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Gán thành công
+
+    delete:
+      tags: [Classes]
+      summary: Bỏ giảng viên khỏi lớp
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Bỏ thành công
+
+  /classes/{malh}/teaching-assistants:
+    get:
+      tags: [Classes]
+      summary: Danh sách trợ giảng
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/malh'
+      responses:
+        '200':
+          description: Danh sách trợ giảng
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Student'
+
+  /classes/{malh}/teaching-assistants/{masv}:
+    parameters:
+      - $ref: '#/components/parameters/malh'
+      - $ref: '#/components/parameters/masv'
+
+    post:
+      tags: [Classes]
+      summary: Gán trợ giảng
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Gán thành công
+
+    delete:
+      tags: [Classes]
+      summary: Bỏ trợ giảng
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Bỏ thành công
+
+  # ============================================================
+  # GRADES
+  # ============================================================
+
+  /classes/{malh}/grades:
+    get:
+      tags: [Grades]
+      summary: Bảng điểm của lớp
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/malh'
+      responses:
+        '200':
+          description: Bảng điểm
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Grade'
+
+    post:
+      tags: [Grades]
+      summary: Nhập điểm
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/malh'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeCreate'
+      responses:
+        '201':
+          description: Nhập điểm thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+
+  /classes/{malh}/grades/{masv}:
+    parameters:
+      - $ref: '#/components/parameters/malh'
+      - $ref: '#/components/parameters/masv'
+
+    get:
+      tags: [Grades]
+      summary: Xem điểm của một sinh viên
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Điểm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+
+    put:
+      tags: [Grades]
+      summary: Cập nhật điểm
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GradeUpdate'
+      responses:
+        '200':
+          description: Cập nhật điểm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+
+    delete:
+      tags: [Grades]
+      summary: Xóa điểm
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Xóa điểm
+
+  # ============================================================
+  # SCHEDULE
+  # ============================================================
+
+  /classes/{malh}/schedule:
+    get:
+      tags: [Schedule]
+      summary: Lịch học của lớp
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/malh'
+      responses:
+        '200':
+          description: Lịch học
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Schedule'
+
+    post:
+      tags: [Schedule]
+      summary: Tạo lịch học
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/malh'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleCreate'
+      responses:
+        '201':
+          description: Tạo lịch thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schedule'
+
+  /schedule/{malichhoc}:
+    parameters:
+      - name: malichhoc
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    put:
+      tags: [Schedule]
+      summary: Cập nhật lịch học
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScheduleUpdate'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Schedule'
+
+    delete:
+      tags: [Schedule]
+      summary: Xóa lịch học
+      x-roles: [AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Xóa thành công
+
+  # ============================================================
+  # ASSIGNMENTS
+  # ============================================================
+
+  /classes/{malh}/assignments:
+    get:
+      tags: [Assignments]
+      summary: Danh sách bài tập của lớp
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/malh'
+      responses:
+        '200':
+          description: Danh sách bài tập
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assignment'
+
+    post:
+      tags: [Assignments]
+      summary: Tạo bài tập
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/malh'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentCreate'
+      responses:
+        '201':
+          description: Tạo bài tập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+
+  /assignments/{mabt}:
+    parameters:
+      - name: mabt
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    get:
+      tags: [Assignments]
+      summary: Chi tiết bài tập
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Bài tập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+
+    put:
+      tags: [Assignments]
+      summary: Cập nhật bài tập
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentUpdate'
+      responses:
+        '200':
+          description: Cập nhật bài tập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+
+    delete:
+      tags: [Assignments]
+      summary: Xóa bài tập
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Xóa thành công
+
+  # ============================================================
+  # GROUPS
+  # ============================================================
+
+  /assignments/{mabt}/groups:
+    get:
+      tags: [Groups]
+      summary: Danh sách nhóm của bài tập
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: mabt
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Danh sách nhóm
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Group'
+
+    post:
+      tags: [Groups]
+      summary: Tạo nhóm
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: mabt
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupCreate'
+      responses:
+        '201':
+          description: Tạo nhóm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+
+  /groups/{manhom}:
+    parameters:
+      - name: manhom
+        in: path
+        required: true
+        schema:
+          type: integer
+
+    get:
+      tags: [Groups]
+      summary: Chi tiết nhóm
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Nhóm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+
+    put:
+      tags: [Groups]
+      summary: Cập nhật nhóm
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupUpdate'
+      responses:
+        '200':
+          description: Cập nhật nhóm
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+
+    delete:
+      tags: [Groups]
+      summary: Xóa nhóm
+      x-roles: [GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Xóa nhóm
+
+  /groups/{manhom}/members:
+    get:
+      tags: [Groups]
+      summary: Danh sách thành viên nhóm
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: manhom
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Thành viên
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Student'
+
+  /groups/{manhom}/members/{masv}:
+    parameters:
+      - name: manhom
+        in: path
+        required: true
+        schema:
+          type: integer
+      - $ref: '#/components/parameters/masv'
+
+    post:
+      tags: [Groups]
+      summary: Thêm thành viên vào nhóm
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '201':
+          description: Thêm thành viên thành công
+
+    delete:
+      tags: [Groups]
+      summary: Xóa thành viên khỏi nhóm
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Xóa thành viên thành công
+
+# ==============================================================
+# COMPONENTS
+# ==============================================================
 
 components:
-    schemas:
-        LoginRequest:
-            type: object
-            required:
-                - username
-                - password
-            properties:
-                username:
-                    type: string
-                    example: "sieunhandienquang@sis.hust.edu.vn"
 
-                password:
-                    type: string
-                    example: "123456"
+  securitySchemes:
+
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+
+    matk:
+      name: matk
+      in: path
+      required: true
+      schema:
+        type: integer
+
+    masv:
+      name: masv
+      in: path
+      required: true
+      schema:
+        type: integer
+
+    magv:
+      name: magv
+      in: path
+      required: true
+      schema:
+        type: integer
+
+    mahp:
+      name: mahp
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 10
+        maxLength: 10
+
+    malh:
+      name: malh
+      in: path
+      required: true
+      schema:
+        type: integer
+
+  responses:
+
+    Unauthorized:
+      description: Chưa đăng nhập hoặc token không hợp lệ
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Forbidden:
+      description: Không có quyền thực hiện thao tác
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Không tìm thấy tài nguyên
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    Conflict:
+      description: Dữ liệu bị trùng hoặc xung đột
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+  schemas:
+
+    # ==========================================================
+    # AUTH / ACCOUNT
+    # ==========================================================
+
+    LoginRequest:
+      type: object
+      required:
+        - username
+        - password
+      properties:
+        username:
+          type: string
+          maxLength: 255
+          example: student01
+        password:
+          type: string
+          format: password
+          example: "123456"
+
+    LoginResponse:
+      type: object
+      required:
+        - access_token
+        - token_type
+        - account
+      properties:
+        access_token:
+          type: string
+        token_type:
+          type: string
+          example: Bearer
+        expires_in:
+          type: integer
+          example: 3600
+        account:
+          $ref: '#/components/schemas/Account'
+
+    Account:
+      type: object
+      properties:
+        matk:
+          type: integer
+        username:
+          type: string
+          maxLength: 255
+        role:
+          type: string
+          enum: [SV, GV, AD]
+        created_at:
+          type: string
+          format: date-time
+          nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          nullable: true
+        deleted_at:
+          type: string
+          format: date-time
+          nullable: true
+        deleted_by:
+          type: integer
+          nullable: true
+
+    AccountCreate:
+      type: object
+      required:
+        - username
+        - password
+        - role
+      properties:
+        username:
+          type: string
+          maxLength: 255
+        password:
+          type: string
+          format: password
+          minLength: 6
+        role:
+          type: string
+          enum: [SV, GV, AD]
+
+    AccountUpdate:
+      type: object
+      properties:
+        username:
+          type: string
+          maxLength: 255
+        password:
+          type: string
+          format: password
+          minLength: 6
+        role:
+          type: string
+          enum: [SV, GV, AD]
+
+    # ==========================================================
+    # STUDENT
+    # ==========================================================
+
+    Student:
+      type: object
+      properties:
+        masv:
+          type: integer
+          example: 20231234
+        matk:
+          type: integer
+        hoten:
+          type: string
+          maxLength: 255
+        gioi_tinh:
+          type: string
+          maxLength: 15
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        chuong_trinh:
+          type: string
+          maxLength: 255
+          nullable: true
+        truong:
+          type: string
+          maxLength: 255
+          nullable: true
+        lop:
+          type: string
+          maxLength: 255
+          nullable: true
+        khoa:
+          type: integer
+          nullable: true
+        trang_thai:
+          type: string
+          maxLength: 255
+          nullable: true
+        cpa:
+          type: number
+          format: double
+          nullable: true
+
+    StudentCreate:
+      type: object
+      required:
+        - masv
+        - matk
+        - hoten
+      properties:
+        masv:
+          type: integer
+        matk:
+          type: integer
+        hoten:
+          type: string
+          maxLength: 255
+        gioi_tinh:
+          type: string
+          maxLength: 15
+        email:
+          type: string
+          format: email
+        chuong_trinh:
+          type: string
+          maxLength: 255
+        truong:
+          type: string
+          maxLength: 255
+        lop:
+          type: string
+          maxLength: 255
+        khoa:
+          type: integer
+        trang_thai:
+          type: string
+          maxLength: 255
+        cpa:
+          type: number
+          format: double
+
+    StudentSelfUpdate:
+      type: object
+      properties:
+        gioi_tinh:
+          type: string
+          maxLength: 15
+        email:
+          type: string
+          format: email
+
+    StudentUpdate:
+      allOf:
+        - $ref: '#/components/schemas/StudentCreate'
+
+    # ==========================================================
+    # LECTURER
+    # ==========================================================
+
+    Lecturer:
+      type: object
+      properties:
+        magv:
+          type: integer
+        matk:
+          type: integer
+        hoten:
+          type: string
+          maxLength: 255
+        gioi_tinh:
+          type: boolean
+          nullable: true
+        email:
+          type: string
+          format: email
+          nullable: true
+        truong:
+          type: string
+          maxLength: 255
+          nullable: true
+
+    LecturerCreate:
+      type: object
+      required:
+        - magv
+        - matk
+        - hoten
+      properties:
+        magv:
+          type: integer
+        matk:
+          type: integer
+        hoten:
+          type: string
+          maxLength: 255
+        gioi_tinh:
+          type: boolean
+        email:
+          type: string
+          format: email
+        truong:
+          type: string
+          maxLength: 255
+
+    LecturerSelfUpdate:
+      type: object
+      properties:
+        gioi_tinh:
+          type: boolean
+        email:
+          type: string
+          format: email
+
+    LecturerUpdate:
+      allOf:
+        - $ref: '#/components/schemas/LecturerCreate'
+
+    # ==========================================================
+    # COURSE
+    # ==========================================================
+
+    Course:
+      type: object
+      properties:
+        mahp:
+          type: string
+          minLength: 10
+          maxLength: 10
+        ten:
+          type: string
+          maxLength: 255
+        truong:
+          type: string
+          maxLength: 255
+          nullable: true
+        bat_buoc:
+          type: boolean
+          nullable: true
+        tin_chi_dao_tao:
+          type: integer
+          nullable: true
+        tin_chi_hoc_phi:
+          type: integer
+          nullable: true
+        phan_bo:
+          type: string
+          minLength: 7
+          maxLength: 7
+          nullable: true
+        noidung:
+          type: string
+          nullable: true
+
+    CourseCreate:
+      type: object
+      required:
+        - mahp
+        - ten
+      properties:
+        mahp:
+          type: string
+          minLength: 10
+          maxLength: 10
+        ten:
+          type: string
+          maxLength: 255
+        truong:
+          type: string
+          maxLength: 255
+        bat_buoc:
+          type: boolean
+          default: false
+        tin_chi_dao_tao:
+          type: integer
+          default: 0
+        tin_chi_hoc_phi:
+          type: integer
+          default: 0
+        phan_bo:
+          type: string
+          minLength: 7
+          maxLength: 7
+        noidung:
+          type: string
+
+    CourseUpdate:
+      allOf:
+        - $ref: '#/components/schemas/CourseCreate'
+
+    # ==========================================================
+    # CLASS
+    # ==========================================================
+
+    Class:
+      type: object
+      properties:
+        malh:
+          type: integer
+        mahp:
+          type: string
+          minLength: 10
+          maxLength: 10
+        malop:
+          type: string
+          minLength: 6
+          maxLength: 6
+        hoc_ky:
+          type: string
+          minLength: 5
+          maxLength: 5
+        hoc_ky_phu:
+          type: string
+          minLength: 2
+          maxLength: 2
+          nullable: true
+        malh_lt:
+          type: integer
+          nullable: true
+        loai:
+          type: string
+          maxLength: 5
+          nullable: true
+        trongso_qt:
+          type: number
+          format: double
+          nullable: true
+        hinhthuc_giangday:
+          type: string
+          maxLength: 10
+          nullable: true
+
+    ClassCreate:
+      type: object
+      required:
+        - mahp
+        - malop
+        - hoc_ky
+      properties:
+        mahp:
+          type: string
+          minLength: 10
+          maxLength: 10
+        malop:
+          type: string
+          minLength: 6
+          maxLength: 6
+        hoc_ky:
+          type: string
+          minLength: 5
+          maxLength: 5
+        hoc_ky_phu:
+          type: string
+          minLength: 2
+          maxLength: 2
+          default: AB
+        malh_lt:
+          type: integer
+          nullable: true
+        loai:
+          type: string
+          maxLength: 5
+        trongso_qt:
+          type: number
+          format: double
+        hinhthuc_giangday:
+          type: string
+          maxLength: 10
+          default: Offline
+
+    ClassUpdate:
+      allOf:
+        - $ref: '#/components/schemas/ClassCreate'
+
+    # ==========================================================
+    # GRADE
+    # ==========================================================
+
+    Grade:
+      type: object
+      properties:
+        madiem:
+          type: integer
+        masv:
+          type: integer
+        malh:
+          type: integer
+        diem_qt:
+          type: number
+          format: double
+          nullable: true
+        diem_ck:
+          type: number
+          format: double
+          nullable: true
+        diem_hp:
+          type: string
+          maxLength: 2
+          nullable: true
+
+    GradeCreate:
+      type: object
+      required:
+        - masv
+      properties:
+        masv:
+          type: integer
+        diem_qt:
+          type: number
+          format: double
+          nullable: true
+        diem_ck:
+          type: number
+          format: double
+          nullable: true
+        diem_hp:
+          type: string
+          maxLength: 2
+          nullable: true
+
+    GradeUpdate:
+      type: object
+      properties:
+        diem_qt:
+          type: number
+          format: double
+          nullable: true
+        diem_ck:
+          type: number
+          format: double
+          nullable: true
+        diem_hp:
+          type: string
+          maxLength: 2
+          nullable: true
+
+    GpaItem:
+      type: object
+      properties:
+        hoc_ky:
+          type: string
+          example: "20261"
+        gpa:
+          type: number
+          format: double
+
+    # ==========================================================
+    # SCHEDULE
+    # ==========================================================
+
+    Schedule:
+      type: object
+      properties:
+        malichhoc:
+          type: integer
+        malh:
+          type: integer
+        ngay_trong_tuan:
+          type: integer
+          minimum: 2
+          maximum: 8
+        tiet_bat_dau:
+          type: integer
+        tiet_ket_thuc:
+          type: integer
+        dia_diem:
+          type: string
+          minLength: 4
+          maxLength: 4
+        phong_hoc:
+          type: string
+          maxLength: 10
+          nullable: true
+        tuan_hoc:
+          type: array
+          items:
+            type: integer
+
+    ScheduleCreate:
+      type: object
+      required:
+        - ngay_trong_tuan
+        - tiet_bat_dau
+        - tiet_ket_thuc
+        - dia_diem
+      properties:
+        ngay_trong_tuan:
+          type: integer
+          minimum: 2
+          maximum: 8
+        tiet_bat_dau:
+          type: integer
+        tiet_ket_thuc:
+          type: integer
+        dia_diem:
+          type: string
+          minLength: 4
+          maxLength: 4
+        phong_hoc:
+          type: string
+          maxLength: 10
+        tuan_hoc:
+          type: array
+          items:
+            type: integer
+
+    ScheduleUpdate:
+      allOf:
+        - $ref: '#/components/schemas/ScheduleCreate'
+
+    # ==========================================================
+    # ASSIGNMENT
+    # ==========================================================
+
+    Assignment:
+      type: object
+      properties:
+        mabt:
+          type: integer
+        malh:
+          type: integer
+        loai:
+          type: string
+          maxLength: 255
+          nullable: true
+        noi_dung:
+          type: string
+          nullable: true
+        deadline:
+          type: string
+          format: date-time
+          nullable: true
+
+    AssignmentCreate:
+      type: object
+      properties:
+        loai:
+          type: string
+          maxLength: 255
+        noi_dung:
+          type: string
+        deadline:
+          type: string
+          format: date-time
+
+    AssignmentUpdate:
+      allOf:
+        - $ref: '#/components/schemas/AssignmentCreate'
+
+    # ==========================================================
+    # GROUP
+    # ==========================================================
+
+    Group:
+      type: object
+      properties:
+        manhom:
+          type: integer
+        mabt:
+          type: integer
+        de_tai:
+          type: string
+          nullable: true
+
+    GroupCreate:
+      type: object
+      properties:
+        de_tai:
+          type: string
+
+    GroupUpdate:
+      allOf:
+        - $ref: '#/components/schemas/GroupCreate'
+
+    # ==========================================================
+    # ERROR
+    # ==========================================================
+
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          example: RESOURCE_NOT_FOUND
+        message:
+          type: string
+          example: Không tìm thấy tài nguyên
+        details:
+          type: object
+          additionalProperties: true

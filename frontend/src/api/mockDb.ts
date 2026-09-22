@@ -1,3 +1,7 @@
+<<<<<<< HEAD
+import type { Course, Assignment, GradeRecord, StudyStats, CourseFilters, AssignmentFilters } from '@/types/student'
+import { INITIAL_COURSES, INITIAL_ASSIGNMENTS, INITIAL_GRADES } from './mock/mockData'
+=======
 import type {
   Course,
   Assignment,
@@ -16,6 +20,7 @@ import {
   INITIAL_ACTIVITIES,
   INITIAL_DRL_SUMMARY,
 } from './mock/mockData'
+>>>>>>> develop
 import { calculateGradeDetail } from '@/lib/score.utils'
 
 const STORAGE_KEY = 'cnpm_qlht_store_v1'
@@ -25,8 +30,11 @@ interface DbSchema {
   courses: Course[]
   assignments: Assignment[]
   grades: GradeRecord[]
+<<<<<<< HEAD
+=======
   activities: ExtracurricularActivity[]
   drlSummary: DrlSummary
+>>>>>>> develop
 }
 
 // In-memory fallback
@@ -34,8 +42,11 @@ let inMemoryDb: DbSchema = {
   courses: [...INITIAL_COURSES],
   assignments: [...INITIAL_ASSIGNMENTS],
   grades: [...INITIAL_GRADES],
+<<<<<<< HEAD
+=======
   activities: [...INITIAL_ACTIVITIES],
   drlSummary: { ...INITIAL_DRL_SUMMARY },
+>>>>>>> develop
 }
 
 // Latency management
@@ -64,6 +75,9 @@ const loadDb = (): DbSchema => {
       saveDb(inMemoryDb)
       return inMemoryDb
     }
+<<<<<<< HEAD
+    return JSON.parse(raw) as DbSchema
+=======
     const parsed = JSON.parse(raw) as DbSchema
     if (!parsed.activities) {
       parsed.activities = [...INITIAL_ACTIVITIES]
@@ -77,6 +91,7 @@ const loadDb = (): DbSchema => {
     }
     if (!parsed.drlSummary) parsed.drlSummary = { ...INITIAL_DRL_SUMMARY }
     return parsed
+>>>>>>> develop
   } catch (err) {
     console.error('Failed to load database from localStorage, falling back to memory', err)
     return inMemoryDb
@@ -94,7 +109,10 @@ const saveDb = (db: DbSchema): void => {
   }
 }
 
+<<<<<<< HEAD
+=======
 
+>>>>>>> develop
 export const mockDb = {
   // Reset all to initial state
   resetAll: (): void => {
@@ -102,8 +120,11 @@ export const mockDb = {
       courses: JSON.parse(JSON.stringify(INITIAL_COURSES)),
       assignments: JSON.parse(JSON.stringify(INITIAL_ASSIGNMENTS)),
       grades: JSON.parse(JSON.stringify(INITIAL_GRADES)),
+<<<<<<< HEAD
+=======
       activities: JSON.parse(JSON.stringify(INITIAL_ACTIVITIES)),
       drlSummary: JSON.parse(JSON.stringify(INITIAL_DRL_SUMMARY)),
+>>>>>>> develop
     }
     saveDb(fresh)
   },
@@ -366,6 +387,9 @@ export const mockDb = {
       urgentDeadlinesCount,
     }
   },
+<<<<<<< HEAD
+}
+=======
 
   // Extracurricular Activities CRUD & DRL
   getActivities: (category?: ActivityCategory | 'all', registeredOnly?: boolean): ExtracurricularActivity[] => {
@@ -425,3 +449,4 @@ export const mockDb = {
   },
 }
 
+>>>>>>> develop

@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+import type { Course, Assignment, GradeRecord } from '@/types/student'
+=======
 import type { Course, Assignment, GradeRecord, ExtracurricularActivity, DrlSummary } from '@/types/student'
+>>>>>>> develop
 
 export const INITIAL_COURSES: Course[] = [
   {
@@ -248,6 +252,8 @@ export const INITIAL_GRADES: GradeRecord[] = [
     letterGrade: 'A',
   },
 ]
+<<<<<<< HEAD
+=======
 
 export const INITIAL_ACTIVITIES: ExtracurricularActivity[] = [
   {
@@ -367,3 +373,4 @@ export const INITIAL_DRL_SUMMARY: DrlSummary = {
   ],
 }
 
+>>>>>>> develop
