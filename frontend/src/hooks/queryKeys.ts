@@ -29,4 +29,17 @@ export const studentQueryKeys = {
     all: ['stats'] as const,
     overview: () => [...studentQueryKeys.stats.all, 'overview'] as const,
   },
+<<<<<<< HEAD
 }
+=======
+
+  // Activities & DRL keys
+  activities: {
+    all: ['activities'] as const,
+    list: (category?: string, registeredOnly?: boolean) =>
+      [...studentQueryKeys.activities.all, 'list', { category, registeredOnly }] as const,
+    drlSummary: () => [...studentQueryKeys.activities.all, 'drl'] as const,
+  },
+}
+
+>>>>>>> develop

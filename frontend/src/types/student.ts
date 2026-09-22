@@ -75,3 +75,44 @@ export interface StudyStats {
   completedAssignments: number
   urgentDeadlinesCount: number // Hạn nộp trong vòng 3 ngày tới
 }
+
+export type ActivityCategory =
+  | 'academic'     // Học thuật, NCKH, Hackathon
+  | 'volunteer'    // Tình nguyện, Hiến máu
+  | 'career'       // Ngày hội việc làm, Tuyển dụng, Doanh nghiệp
+  | 'sports_arts'  // Văn nghệ, Thể thao, Giải đấu
+  | 'community'    // Hoạt động Đoàn, Hội, Cộng đồng
+
+export interface ExtracurricularActivity {
+  id: string
+  title: string
+  organizer: string
+  category: ActivityCategory
+  drlPoints: number
+  drlCriterion: string // e.g. "Tiêu chí 3: Hoạt động phong trào"
+  date: string        // YYYY-MM-DD
+  time: string        // e.g. "08:00 - 11:30"
+  location: string    // e.g. "Hội trường C2", "Thư viện Tạ Quang Bửu"
+  registered: boolean
+  attended: boolean
+  maxParticipants?: number
+  registeredCount: number
+  description: string
+  imageUrl?: string
+  tags?: string[]
+}
+
+export interface DrlCriteriaScore {
+  criterionId: number
+  name: string
+  maxScore: number
+  currentScore: number
+}
+
+export interface DrlSummary {
+  totalDrl: number
+  rank: 'Xuất sắc' | 'Tốt' | 'Khá' | 'Trung bình' | 'Yếu' | 'Kém'
+  nextRankTarget: number
+  criteriaBreakdown: DrlCriteriaScore[]
+}
+
