@@ -4,8 +4,11 @@ Table tai_khoan {
   matk integer [pk, increment]
   username varchar(255) [not null, unique]
   password varchar(255) [not null]
-  createdAt timestamp
-  updatedAt timestamp
+  role char(2) [not null, default: "SV", note: "vd: SV, GV, AD"]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+  deleted_by integer
 }
 
 Table sinh_vien {
@@ -44,19 +47,28 @@ Table hoc_phan {
 
 // Moi ki hoc se co ma lop trung lap (nhung lop hoc khac nhau)
 Table lop_hoc {
-  malh integer [pk, increment]
+  malh integer [pk, increment] // id
   mahp char(10) [not null]
-  malop char(6) [not null, note: "vd: 172879"]
+  malop char(6) [not null, note: "vd: 172879"] // ma lop tren thoi khoa bieu
   hoc_ky char(5) [not null, note: "vd: 20261"]
   hoc_ky_phu char(2) [default: "AB"]
-  malh_lt integer [not null, note: "vd: Lop BT phai di kem voi lop LT"]
+  malh_lt integer [note: "vd: Lop BT phai di kem voi lop LT"]
   loai char(5) [note: "vd: LT, BT, LT+BT, TN, DA, ..."]
   trongso_qt decimal(3, 2) [note: "vd: 0.6 -> trong so ck = 0.4"]
   hinhthuc_giangday char(10) [default: "Offline", note: "vd: Offline, BLearning, ..."]
 
   indexes {
-    (malop, hoc_ky) [unique] // Mot hoc ky chi co mot ma lop duy nhat
+    // Mot hoc ky chi co mot ma lop duy nhat
+    (malop, hoc_ky) [unique] 
   }
+}
+
+// Sinh vien - Lop hoc
+Table sv_lh {
+  masv integer [not null]
+  malh integer [not null]
+
+  indexes { (masv, malh) [pk] }
 }
 
 // Giang vien - Lop hoc
@@ -81,7 +93,7 @@ Table tiet_hoc {
 }
 
 Table lich_hoc {
-  malichhoc integer [pk]
+  malichhoc integer [pk, increment]
   malh integer [not null]
   ngay_trong_tuan integer [not null, note: "vd: thu 2, 3, ..., 7, 8 (chu nhat)"]
   tiet_bat_dau integer [not null]
@@ -94,7 +106,7 @@ Table lich_hoc {
 Table tuan_hoc {
   math integer [pk]
   malichhoc integer [not null]
-  tuan_so integer [note: "1, 2, ..."]
+  tuan_so integer [not null, note: "1, 2, ..."]
 
   indexes { (malichhoc, tuan_so) [unique] }
 }
@@ -105,7 +117,6 @@ Table diem {
   malh integer [not null]
   diem_qt decimal(4, 2) [note: "nhieu nhat 4 chu so, 2 chu so sau dau phay"]
   diem_ck decimal(4, 2)
-  diem_hp char(2) [note: "vd: A, B+"]
 
   indexes {
     (masv, malh) [unique]
@@ -139,12 +150,15 @@ Table nhom_sv {
 
 Ref: sinh_vien.matk - tai_khoan.matk
 Ref: giang_vien.matk - tai_khoan.matk
+Ref: tai_khoan.deleted_by >? tai_khoan.matk
 
 Ref: diem.masv > sinh_vien.masv 
 Ref: diem.malh > lop_hoc.malh 
 
 Ref: lop_hoc.mahp > hoc_phan.mahp 
-Ref: lop_hoc.malh_lt > lop_hoc.malh
+Ref: lop_hoc.malh_lt >? lop_hoc.malh
+Ref: sv_lh.malh > lop_hoc.malh
+Ref: sv_lh.masv > sinh_vien.masv
 Ref: gv_lh.malh > lop_hoc.malh
 Ref: gv_lh.magv > giang_vien.magv
 Ref: teacher_assistant.masv > sinh_vien.masv
