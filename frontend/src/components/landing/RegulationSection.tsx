@@ -7,10 +7,10 @@ export const RegulationSection: React.FC = () => {
     { grade10: '8.5 - 10.0', letter: 'A', gpa: '4.0', status: 'Giỏi / Xuất Sắc', color: 'text-emerald-600 dark:text-emerald-400 bg-emerald-500/10' },
     { grade10: '8.0 - 8.4', letter: 'B+', gpa: '3.5', status: 'Khá Giỏi', color: 'text-blue-600 dark:text-blue-400 bg-blue-500/10' },
     { grade10: '7.0 - 7.9', letter: 'B', gpa: '3.0', status: 'Khá', color: 'text-cyan-600 dark:text-cyan-400 bg-cyan-500/10' },
-    { grade10: '6.5 - 6.9', letter: 'C+', gpa: '2.5', status: 'Trung Bình Khá', color: 'text-indigo-600 dark:text-indigo-400 bg-indigo-500/10' },
+    { grade10: '6.5 - 6.9', letter: 'C+', gpa: '2.5', status: 'Trung Bình Khá', color: 'text-sky-600 dark:text-sky-400 bg-sky-500/10' },
     { grade10: '5.5 - 6.4', letter: 'C', gpa: '2.0', status: 'Trung Bình', color: 'text-amber-600 dark:text-amber-400 bg-amber-500/10' },
     { grade10: '5.0 - 5.4', letter: 'D+', gpa: '1.5', status: 'Trung Bình Yếu', color: 'text-orange-600 dark:text-orange-400 bg-orange-500/10' },
-    { grade10: '4.0 - 4.9', letter: 'D', gpa: '1.0', status: 'Đạt Tối Thiểu', color: 'text-purple-600 dark:text-purple-400 bg-purple-500/10' },
+    { grade10: '4.0 - 4.9', letter: 'D', gpa: '1.0', status: 'Đạt Tối Thiểu', color: 'text-teal-600 dark:text-teal-400 bg-teal-500/10' },
     { grade10: '< 4.0', letter: 'F', gpa: '0.0', status: 'Không Đạt (Học Lại)', color: 'text-rose-600 dark:text-rose-400 bg-rose-500/10' },
   ]
 
@@ -25,7 +25,7 @@ export const RegulationSection: React.FC = () => {
     <section id="quyche" className="py-16 md:py-24 border-b">
       <div className="container mx-auto max-w-7xl px-4 sm:px-8">
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-14">
-          <Badge variant="outline" className="px-3.5 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800">
+          <Badge variant="outline" className="px-3.5 py-1 text-xs font-semibold text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-800 bg-sky-50/70 dark:bg-sky-950/40">
             Cẩm Nang Sinh Viên
           </Badge>
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
@@ -41,7 +41,7 @@ export const RegulationSection: React.FC = () => {
           <div className="lg:col-span-7 rounded-2xl border border-border/80 bg-card overflow-hidden shadow-sm">
             <div className="p-4 sm:p-5 border-b bg-muted/30 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <BookOpen className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+                <BookOpen className="h-4 w-4 text-sky-600 dark:text-sky-400" />
                 <h3 className="font-semibold text-sm text-foreground">Thang Điểm 10 Sang Điểm Chữ & Thang 4</h3>
               </div>
               <span className="text-xs text-muted-foreground">Theo chuẩn Bộ GD&ĐT</span>
@@ -78,12 +78,12 @@ export const RegulationSection: React.FC = () => {
 
           {/* Right: Rank Rules Cards */}
           <div className="lg:col-span-5 space-y-4">
-            <div className="p-4 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-800">
-              <h4 className="font-semibold text-sm text-indigo-900 dark:text-indigo-200 flex items-center gap-2">
-                <Award className="h-4 w-4 text-indigo-600 dark:text-indigo-400" />
+            <div className="p-4 rounded-xl bg-sky-50/60 dark:bg-sky-950/30 border border-sky-200 dark:border-sky-800">
+              <h4 className="font-semibold text-sm text-sky-900 dark:text-sky-200 flex items-center gap-2">
+                <Award className="h-4 w-4 text-sky-600 dark:text-sky-400" />
                 <span>Tiêu Chuẩn Xếp Hạng Học Lực Học Kỳ</span>
               </h4>
-              <p className="text-xs text-indigo-700/80 dark:text-indigo-300/80 mt-1">
+              <p className="text-xs text-sky-700/80 dark:text-sky-300/80 mt-1">
                 Điểm GPA dùng để xét khen thưởng, học bổng và điều kiện tốt nghiệp.
               </p>
             </div>

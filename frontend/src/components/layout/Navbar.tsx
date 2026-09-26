@@ -1,4 +1,3 @@
-import React from 'react'
 import { GraduationCap, ArrowRight, Sun, Moon, Sparkles, BookOpen } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -26,15 +25,15 @@ export const Navbar: React.FC<NavbarProps> = ({
           onClick={onNavigateHome}
           className="flex items-center gap-3 cursor-pointer group"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform duration-200">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-sky-500 via-blue-600 to-cyan-700 text-white shadow-md shadow-sky-500/25 group-hover:scale-105 transition-transform duration-200">
             <GraduationCap className="h-6 w-6" />
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <span className="font-extrabold tracking-tight text-lg bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-400 dark:to-indigo-300">
+              <span className="font-extrabold tracking-tight text-lg bg-clip-text text-transparent bg-gradient-to-r from-sky-600 to-blue-700 dark:from-sky-400 dark:to-blue-300">
                 CNPM • QLHT
               </span>
-              <Badge variant="outline" className="text-[10px] uppercase font-semibold tracking-wider text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800">
+              <Badge variant="outline" className="text-[10px] uppercase font-semibold tracking-wider text-sky-700 dark:text-sky-300 border-sky-200 dark:border-sky-800 bg-sky-50/70 dark:bg-sky-950/40">
                 Weamis Edition
               </Badge>
             </div>
@@ -86,7 +85,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {activeView === 'landing' ? (
             <Button
               onClick={onEnterPortal}
-              className="relative overflow-hidden rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium shadow-md shadow-indigo-500/25 px-5 h-9 group transition-all duration-200"
+              className="relative overflow-hidden rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-700 hover:from-sky-700 hover:to-blue-700 text-white font-medium shadow-md shadow-sky-500/25 px-5 h-9 group transition-all duration-200"
             >
               <span className="flex items-center gap-2">
                 <span>Cổng Sinh Viên</span>
@@ -94,8 +93,8 @@ export const Navbar: React.FC<NavbarProps> = ({
               </span>
             </Button>
           ) : (
-            <Badge variant="secondary" className="px-3 py-1 font-semibold flex items-center gap-1.5 text-xs bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
-              <Sparkles className="h-3.5 w-3.5 text-indigo-500" />
+            <Badge variant="secondary" className="px-3 py-1 font-semibold flex items-center gap-1.5 text-xs bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800">
+              <Sparkles className="h-3.5 w-3.5 text-sky-500" />
               <span>Cổng Sinh Viên Đang Mở</span>
             </Badge>
           )}

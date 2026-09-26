@@ -9,7 +9,7 @@ export const Footer: React.FC = () => {
           {/* Col 1: Brand info */}
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white shadow-sm">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white shadow-xs">
                 <GraduationCap className="h-5 w-5" />
               </div>
               <span className="font-bold text-base text-foreground tracking-tight">
@@ -34,7 +34,7 @@ export const Footer: React.FC = () => {
             <ul className="space-y-2 text-sm">
               <li>
                 <span className="hover:text-foreground transition-colors cursor-pointer flex items-center gap-1.5">
-                  <BookOpen className="h-3.5 w-3.5 text-indigo-500" />
+                  <BookOpen className="h-3.5 w-3.5 text-sky-500" />
                   Học phần & Môn học
                 </span>
               </li>
@@ -102,11 +102,11 @@ export const Footer: React.FC = () => {
                 <span>OpenAPI / Swagger 3.0</span>
               </li>
               <li className="flex items-center gap-1.5">
-                <span className="inline-block w-2 h-2 rounded-full bg-indigo-500" />
+                <span className="inline-block w-2 h-2 rounded-full bg-sky-500" />
                 <span>React 19 & Tailwind v4</span>
               </li>
               <li className="flex items-center gap-1.5">
-                <span className="inline-block w-2 h-2 rounded-full bg-purple-500" />
+                <span className="inline-block w-2 h-2 rounded-full bg-cyan-500" />
                 <span>TanStack Query v5</span>
               </li>
             </ul>

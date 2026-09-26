@@ -187,7 +187,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
           onClick={() => setActiveSubTab('schedule')}
           className={`relative pb-3 transition-colors ${
             activeSubTab === 'schedule'
-              ? 'text-red-700 dark:text-red-500 font-bold border-b-2 border-red-700 dark:border-red-500'
+              ? 'text-sky-600 dark:text-sky-400 font-bold border-b-2 border-sky-600 dark:border-sky-400'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -197,7 +197,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
           onClick={() => setActiveSubTab('teaching_assistants')}
           className={`relative pb-3 transition-colors ${
             activeSubTab === 'teaching_assistants'
-              ? 'text-red-700 dark:text-red-500 font-bold border-b-2 border-red-700 dark:border-red-500'
+              ? 'text-sky-600 dark:text-sky-400 font-bold border-b-2 border-sky-600 dark:border-sky-400'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -207,7 +207,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
           onClick={() => setActiveSubTab('textbooks')}
           className={`relative pb-3 transition-colors ${
             activeSubTab === 'textbooks'
-              ? 'text-red-700 dark:text-red-500 font-bold border-b-2 border-red-700 dark:border-red-500'
+              ? 'text-sky-600 dark:text-sky-400 font-bold border-b-2 border-sky-600 dark:border-sky-400'
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
@@ -246,7 +246,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                   name="schedule_view_mode"
                   checked={viewMode === 'calendar'}
                   onChange={() => setViewMode('calendar')}
-                  className="w-4 h-4 text-red-700 focus:ring-red-600 accent-red-700"
+                  className="w-4 h-4 text-sky-600 focus:ring-sky-500 accent-sky-600"
                 />
                 <span className={viewMode === 'calendar' ? 'font-bold text-foreground' : 'text-muted-foreground'}>
                   Lịch
@@ -259,7 +259,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                   name="schedule_view_mode"
                   checked={viewMode === 'detail'}
                   onChange={() => setViewMode('detail')}
-                  className="w-4 h-4 text-red-700 focus:ring-red-600 accent-red-700"
+                  className="w-4 h-4 text-sky-600 focus:ring-sky-500 accent-sky-600"
                 />
                 <span className={viewMode === 'detail' ? 'font-bold text-foreground' : 'text-muted-foreground'}>
                   Chi tiết
@@ -273,13 +273,13 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                 variant="outline"
                 size="sm"
                 onClick={handleToday}
-                className="rounded-full px-4 h-8 text-xs font-semibold text-red-700 border-red-300 dark:border-red-900/80 hover:bg-red-50 dark:hover:bg-red-950/40"
+                className="rounded-full px-4 h-8 text-xs font-semibold text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-800 hover:bg-sky-50 dark:hover:bg-sky-950/40"
               >
                 Hôm nay
               </Button>
 
               <div className="flex items-center gap-1.5 px-3 py-1 rounded-lg border bg-card text-xs font-medium text-foreground">
-                <CalendarDays className="h-3.5 w-3.5 text-red-700" />
+                <CalendarDays className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
                 <span>Lịch tháng</span>
               </div>
             </div>
@@ -294,7 +294,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                 <div className="flex items-center justify-between">
                   <button
                     onClick={handlePrevMonth}
-                    className="w-8 h-8 rounded-full border border-border/80 hover:border-red-700 flex items-center justify-center text-muted-foreground hover:text-red-700 transition-colors"
+                    className="w-8 h-8 rounded-full border border-border/80 hover:border-sky-600 flex items-center justify-center text-muted-foreground hover:text-sky-600 transition-colors"
                     aria-label="Tháng trước"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -306,7 +306,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
 
                   <button
                     onClick={handleNextMonth}
-                    className="w-8 h-8 rounded-full border border-border/80 hover:border-red-700 flex items-center justify-center text-muted-foreground hover:text-red-700 transition-colors"
+                    className="w-8 h-8 rounded-full border border-border/80 hover:border-sky-600 flex items-center justify-center text-muted-foreground hover:text-sky-600 transition-colors"
                     aria-label="Tháng sau"
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -342,9 +342,9 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                         <div
                           className={`w-8 h-8 rounded-full flex items-center justify-center text-xs transition-all ${
                             selected
-                              ? 'bg-red-700 text-white font-bold shadow-md shadow-red-700/30'
+                              ? 'bg-sky-600 text-white font-bold shadow-md shadow-sky-600/30'
                               : today
-                              ? 'border-2 border-red-600 text-red-700 dark:text-red-400 font-bold'
+                              ? 'border-2 border-sky-600 text-sky-700 dark:text-sky-300 font-bold'
                               : cell.isCurrentMonth
                               ? 'text-foreground hover:bg-muted/80 font-medium'
                               : 'text-muted-foreground/40 font-normal'
@@ -366,7 +366,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                           {hasActivity && (
                             <span
                               className={`w-1.5 h-1.5 rounded-full ${
-                                selected ? 'bg-purple-300' : 'bg-purple-600 dark:bg-purple-400'
+                                selected ? 'bg-cyan-200' : 'bg-cyan-500 dark:bg-cyan-400'
                               }`}
                               title={`${dayActs.length} hoạt động ngoại khóa`}
                             />
@@ -384,15 +384,15 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                     <span>Lịch học</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-purple-600 dark:bg-purple-400 inline-block" />
+                    <span className="w-2 h-2 rounded-full bg-cyan-500 dark:bg-cyan-400 inline-block" />
                     <span>Sự kiện ngoại khóa</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3.5 h-3.5 rounded-full bg-red-700 inline-block" />
+                    <span className="w-3.5 h-3.5 rounded-full bg-sky-600 inline-block" />
                     <span>Đang chọn</span>
                   </div>
                   <div className="flex items-center gap-1.5">
-                    <span className="w-3.5 h-3.5 rounded-full border border-red-600 inline-block" />
+                    <span className="w-3.5 h-3.5 rounded-full border border-sky-600 inline-block" />
                     <span>Hôm nay</span>
                   </div>
                 </div>
@@ -436,7 +436,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                       return (
                         <div
                           key={course.id}
-                          className="rounded-2xl border border-border/80 bg-background/90 p-5 shadow-xs transition-all hover:border-red-700/40"
+                          className="rounded-2xl border border-border/80 bg-background/90 p-5 shadow-xs transition-all hover:border-sky-500/40"
                         >
                           <div className="grid grid-cols-12 gap-4">
                             {/* Left: Time axis */}
@@ -448,7 +448,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
 
                             {/* Right: Course details */}
                             <div className="col-span-9 sm:col-span-10 space-y-2">
-                              <h4 className="font-bold text-sm sm:text-base text-red-700 dark:text-red-500 leading-snug">
+                              <h4 className="font-bold text-sm sm:text-base text-sky-700 dark:text-sky-400 leading-snug">
                                 {course.code} - {course.name}
                               </h4>
 
@@ -488,7 +488,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                     {/* Extracurricular activities on this date */}
                     {selectedDayActivities.length > 0 && (
                       <div className="pt-2 space-y-3">
-                        <div className="flex items-center gap-2 text-xs font-bold text-purple-700 dark:text-purple-400">
+                        <div className="flex items-center gap-2 text-xs font-bold text-cyan-700 dark:text-cyan-400">
                           <Flame className="h-4 w-4" />
                           <span>Hoạt động ngoại khóa & Săn ĐRL trong ngày ({selectedDayActivities.length})</span>
                         </div>
@@ -496,12 +496,12 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                         {selectedDayActivities.map((act) => (
                           <div
                             key={act.id}
-                            className="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 flex items-center justify-between gap-3"
+                            className="p-4 rounded-xl border border-cyan-500/30 bg-cyan-500/5 flex items-center justify-between gap-3"
                           >
                             <div className="space-y-1">
                               <div className="flex items-center gap-2">
                                 <span className="font-bold text-sm text-foreground">{act.title}</span>
-                                <Badge className="bg-red-600 text-white text-[10px] font-bold">
+                                <Badge className="bg-sky-600 text-white text-[10px] font-bold">
                                   +{act.drlPoints} ĐRL
                                 </Badge>
                               </div>
@@ -517,7 +517,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                               className={`rounded-lg text-xs font-semibold h-8 shrink-0 ${
                                 act.registered
                                   ? 'border border-emerald-500/40 text-emerald-600'
-                                  : 'bg-purple-600 hover:bg-purple-700 text-white'
+                                  : 'bg-sky-600 hover:bg-sky-700 text-white'
                               }`}
                             >
                               {act.registered ? '✓ Đã lưu lịch' : 'Đăng ký'}
@@ -577,7 +577,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                   <tbody className="divide-y divide-border/40">
                     {courses.map((course) => (
                       <tr key={course.id} className="hover:bg-muted/30 transition-colors">
-                        <td className="py-3 px-4 font-bold text-red-700 dark:text-red-500 font-mono">
+                        <td className="py-3 px-4 font-bold text-sky-700 dark:text-sky-400 font-mono">
                           {course.code}
                         </td>
                         <td className="py-3 px-4 font-semibold text-foreground">
@@ -615,7 +615,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/60">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <Flame className="h-5 w-5 text-red-600" />
+                  <Flame className="h-5 w-5 text-sky-600 dark:text-sky-400" />
                   <h3 className="text-lg font-bold text-foreground">
                     Sự Kiện Ngoại Khóa & Hoạt Động Rèn Luyện Sắp Tới
                   </h3>
@@ -630,7 +630,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                   variant="outline"
                   size="sm"
                   onClick={onNavigateActivities}
-                  className="rounded-xl text-xs font-semibold gap-1.5 self-start sm:self-auto border-red-200 dark:border-red-900/60 text-red-700 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40"
+                  className="rounded-xl text-xs font-semibold gap-1.5 self-start sm:self-auto border-sky-300 dark:border-sky-800 text-sky-700 dark:text-sky-300 hover:bg-sky-50 dark:hover:bg-sky-950/40"
                 >
                   <span>Mở Trang Hoạt Động & Săn ĐRL</span>
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -643,11 +643,11 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
               {activities.slice(0, 3).map((act) => (
                 <div
                   key={act.id}
-                  className="p-4 rounded-xl border border-border/70 bg-muted/20 hover:bg-card hover:border-red-700/40 transition-all space-y-3 flex flex-col justify-between"
+                  className="p-4 rounded-xl border border-border/70 bg-muted/20 hover:bg-card hover:border-sky-500/40 transition-all space-y-3 flex flex-col justify-between"
                 >
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-red-600/10 text-red-700 dark:text-red-400 border border-red-600/20">
+                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-sky-500/10 text-sky-700 dark:text-sky-300 border border-sky-500/20">
                         +{act.drlPoints} ĐRL
                       </span>
                       <span className="text-[11px] text-muted-foreground font-medium">
@@ -661,7 +661,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
 
                     <div className="space-y-1 text-xs text-muted-foreground">
                       <div className="flex items-center gap-1.5">
-                        <Calendar className="h-3.5 w-3.5 text-red-600" />
+                        <Calendar className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
                         <span>
                           {new Date(act.date).toLocaleDateString('vi-VN', {
                             weekday: 'short',
@@ -687,7 +687,7 @@ export function ScheduleView({ onNavigateActivities }: ScheduleViewProps) {
                       className={`w-full rounded-lg text-xs font-semibold h-8 transition-colors ${
                         act.registered
                           ? 'border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600'
-                          : 'bg-red-700 hover:bg-red-800 text-white'
+                          : 'bg-sky-600 hover:bg-sky-700 text-white'
                       }`}
                       title={act.registered ? 'Bấm để hủy đăng ký' : 'Bấm để đăng ký tham gia'}
                     >

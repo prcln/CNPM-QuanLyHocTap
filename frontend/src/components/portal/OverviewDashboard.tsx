@@ -77,11 +77,11 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   return (
     <div className="space-y-6">
       {/* Top Banner Greeting */}
-      <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-purple-600/10 p-6 sm:p-8 backdrop-blur-sm">
+      <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-r from-sky-500/10 via-blue-600/10 to-cyan-500/10 p-6 sm:p-8 backdrop-blur-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">
+              <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-sky-500/15 text-sky-700 dark:text-sky-300">
                 Học kỳ II • Năm học 2025 - 2026
               </span>
               <span className="text-xs text-muted-foreground">• Tuần học thứ 6</span>
@@ -101,13 +101,13 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               size="sm"
               className="rounded-xl border-border/70 hover:bg-accent text-xs font-medium"
             >
-              <CheckSquare className="h-4 w-4 mr-1.5 text-indigo-500" />
+              <CheckSquare className="h-4 w-4 mr-1.5 text-sky-600 dark:text-sky-400" />
               Xem Bài Tập
             </Button>
             <Button
               onClick={() => onNavigateTab('schedule')}
               size="sm"
-              className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-medium shadow-sm shadow-indigo-500/20"
+              className="rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-700 hover:from-sky-700 hover:to-blue-700 text-white text-xs font-medium shadow-sm shadow-sky-500/20"
             >
               <Calendar className="h-4 w-4 mr-1.5" />
               Lịch Học Tuần
@@ -127,7 +127,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               GPA Tạm Tính
             </CardTitle>
-            <div className="p-2 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+            <div className="p-2 rounded-xl bg-sky-500/10 text-sky-600 dark:text-sky-400">
               <Award className="h-4 w-4" />
             </div>
           </CardHeader>
@@ -210,7 +210,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
             <CardTitle className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
               Lớp Học Phần
             </CardTitle>
-            <div className="p-2 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400">
+            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400">
               <School className="h-4 w-4" />
             </div>
           </CardHeader>
@@ -337,7 +337,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
                     className="p-3.5 rounded-xl border border-border/70 bg-card hover:border-primary/40 transition-colors space-y-2"
                   >
                     <div className="flex items-center justify-between">
-                      <Badge variant="outline" className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400">
+                      <Badge variant="outline" className="text-[10px] font-bold text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-800">
                         {course.code}
                       </Badge>
                       <span className="text-xs font-semibold text-muted-foreground">
@@ -372,7 +372,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
           <Card className="border border-border/80 shadow-xs bg-gradient-to-b from-card to-card/70">
             <CardHeader className="pb-3">
               <CardTitle className="text-base font-bold text-foreground flex items-center gap-2">
-                <TrendingUp className="h-4 w-4 text-indigo-500" />
+                <TrendingUp className="h-4 w-4 text-sky-600 dark:text-sky-400" />
                 <span>Mục Tiêu Học Tập Kỳ Này</span>
               </CardTitle>
               <CardDescription className="text-xs">
@@ -380,19 +380,19 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="p-3 rounded-xl bg-indigo-50/60 dark:bg-indigo-950/40 border border-indigo-200/80 dark:border-indigo-800/80">
+              <div className="p-3 rounded-xl bg-sky-50/60 dark:bg-sky-950/40 border border-sky-200/80 dark:border-sky-800/80">
                 <div className="flex items-center justify-between text-xs font-medium">
-                  <span className="text-indigo-900 dark:text-indigo-200">Mục tiêu GPA: 3.60</span>
-                  <span className="font-bold text-indigo-700 dark:text-indigo-300">Đạt 106%</span>
+                  <span className="text-sky-900 dark:text-sky-200">Mục tiêu GPA: 3.60</span>
+                  <span className="font-bold text-sky-700 dark:text-sky-300">Đạt 106%</span>
                 </div>
                 {/* Progress bar */}
-                <div className="w-full bg-indigo-200/60 dark:bg-indigo-900/60 rounded-full h-2 mt-2">
+                <div className="w-full bg-sky-200/60 dark:bg-sky-900/60 rounded-full h-2 mt-2">
                   <div
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 h-2 rounded-full"
+                    className="bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-700 h-2 rounded-full"
                     style={{ width: '100%' }}
                   />
                 </div>
-                <p className="text-[11px] text-indigo-700/80 dark:text-indigo-300/80 mt-2">
+                <p className="text-[11px] text-sky-700/80 dark:text-sky-300/80 mt-2">
                   GPA hiện tại: <span className="font-bold">{currentGpa.toFixed(2)}</span>. Bạn đang nằm trong danh sách xét cấp học bổng loại Xuất Sắc!
                 </p>
               </div>

@@ -72,7 +72,7 @@ export function ExtracurricularView() {
   > = {
     academic: {
       label: 'Học thuật & AI',
-      color: 'from-blue-600 to-indigo-600',
+      color: 'from-sky-500 to-blue-700',
       badgeClass: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-900',
     },
     volunteer: {
@@ -82,8 +82,8 @@ export function ExtracurricularView() {
     },
     career: {
       label: 'Ngày hội việc làm',
-      color: 'from-purple-600 to-violet-600',
-      badgeClass: 'bg-purple-500/15 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-900',
+      color: 'from-cyan-600 to-blue-700',
+      badgeClass: 'bg-cyan-500/15 text-cyan-700 dark:text-cyan-300 border-cyan-300 dark:border-cyan-800',
     },
     sports_arts: {
       label: 'Thể thao & Văn nghệ',
@@ -100,12 +100,12 @@ export function ExtracurricularView() {
   return (
     <div className="space-y-6">
       {/* 1. DRL SCORE OVERVIEW & TARGET CARD */}
-      <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-r from-red-600/10 via-amber-600/10 to-indigo-600/10 p-6 sm:p-8 backdrop-blur-sm shadow-xs space-y-5">
+      <div className="relative overflow-hidden rounded-2xl border border-border/80 bg-gradient-to-r from-sky-500/10 via-blue-600/10 to-cyan-500/10 p-6 sm:p-8 backdrop-blur-sm shadow-xs space-y-5">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6">
           {/* Left score overview */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold px-3 py-1 rounded-full bg-red-600 text-white uppercase tracking-wider shadow-xs">
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-sky-600 text-white uppercase tracking-wider shadow-xs">
                 Điểm Rèn Luyện (ĐRL) • Học kỳ II
               </span>
               <span className="text-xs text-muted-foreground">• Chuẩn CTSV ĐHBK Hà Nội</span>
@@ -123,7 +123,7 @@ export function ExtracurricularView() {
 
             <p className="text-xs sm:text-sm text-muted-foreground max-w-xl">
               Bạn chỉ cần tích lũy thêm{' '}
-              <span className="font-bold text-red-600 dark:text-red-400">
+              <span className="font-bold text-sky-600 dark:text-sky-400">
                 {(drlSummary?.nextRankTarget ?? 90) - (drlSummary?.totalDrl ?? 88)} điểm
               </span>{' '}
               nữa để đạt mốc xếp loại <span className="font-bold text-foreground">Xuất Sắc (≥ 90 điểm)</span> và đủ điều kiện xét cấp Học bổng Khuyến khích học tập!
@@ -178,7 +178,7 @@ export function ExtracurricularView() {
                   </p>
                   <div className="w-full bg-muted rounded-full h-1.5 mt-1">
                     <div
-                      className="bg-gradient-to-r from-red-600 to-amber-500 h-1.5 rounded-full"
+                      className="bg-gradient-to-r from-sky-600 to-cyan-400 h-1.5 rounded-full"
                       style={{ width: `${pct}%` }}
                     />
                   </div>
@@ -199,7 +199,7 @@ export function ExtracurricularView() {
             onClick={() => setSelectedCategory('all')}
             className={`rounded-full h-8 text-xs font-semibold px-3.5 ${
               selectedCategory === 'all'
-                ? 'bg-red-700 hover:bg-red-800 text-white shadow-xs'
+                ? 'bg-sky-600 hover:bg-sky-700 text-white shadow-xs'
                 : 'text-muted-foreground'
             }`}
           >
@@ -230,7 +230,7 @@ export function ExtracurricularView() {
                 onClick={() => setSelectedCategory(catKey)}
                 className={`rounded-full h-8 text-xs font-semibold px-3.5 whitespace-nowrap ${
                   isAct
-                    ? 'bg-red-700 hover:bg-red-800 text-white shadow-xs'
+                    ? 'bg-sky-600 hover:bg-sky-700 text-white shadow-xs'
                     : 'text-muted-foreground'
                 }`}
               >
@@ -287,7 +287,7 @@ export function ExtracurricularView() {
             return (
               <Card
                 key={act.id}
-                className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card hover:border-red-700/50 hover:shadow-lg transition-all duration-200 flex flex-col justify-between"
+                className="group relative overflow-hidden rounded-2xl border border-border/80 bg-card hover:border-sky-500/50 hover:shadow-lg transition-all duration-200 flex flex-col justify-between"
               >
                 {/* Top header & DRL Points Badge */}
                 <div className="p-5 space-y-3.5">
@@ -297,7 +297,7 @@ export function ExtracurricularView() {
                     </Badge>
 
                     {/* DRL Points chip */}
-                    <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-red-600/10 text-red-700 dark:text-red-400 font-extrabold text-xs border border-red-600/20 shadow-2xs">
+                    <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-sky-500/10 text-sky-700 dark:text-sky-300 font-extrabold text-xs border border-sky-500/20 shadow-2xs">
                       <Sparkles className="h-3 w-3" />
                       <span>+{act.drlPoints} ĐRL</span>
                     </div>
@@ -307,7 +307,7 @@ export function ExtracurricularView() {
                   <div>
                     <h3
                       onClick={() => setActiveModalActivity(act)}
-                      className="font-bold text-base text-foreground line-clamp-2 hover:text-red-700 cursor-pointer transition-colors"
+                      className="font-bold text-base text-foreground line-clamp-2 hover:text-sky-600 dark:hover:text-sky-400 cursor-pointer transition-colors"
                       title={act.title}
                     >
                       {act.title}
@@ -320,7 +320,7 @@ export function ExtracurricularView() {
                   {/* Date, Time & Location */}
                   <div className="space-y-1.5 text-xs text-muted-foreground pt-1 border-t border-border/50">
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-3.5 w-3.5 text-red-600 shrink-0" />
+                      <Calendar className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
                       <span className="font-medium text-foreground">
                         {new Date(act.date).toLocaleDateString('vi-VN', {
                           weekday: 'long',
@@ -371,7 +371,7 @@ export function ExtracurricularView() {
                       className={`flex-1 rounded-xl text-xs font-semibold h-9 transition-colors ${
                         isReg
                           ? 'border border-emerald-500/40 text-emerald-700 dark:text-emerald-300 hover:bg-rose-50 dark:hover:bg-rose-950/40 hover:text-rose-600'
-                          : 'bg-red-700 hover:bg-red-800 text-white shadow-xs'
+                          : 'bg-sky-600 hover:bg-sky-700 text-white shadow-xs'
                       }`}
                       title={isReg ? 'Bấm để hủy đăng ký' : 'Bấm để đăng ký'}
                     >
@@ -421,7 +421,7 @@ export function ExtracurricularView() {
                 <Badge variant="outline" className={`text-xs font-semibold ${categoryConfig[activeModalActivity.category].badgeClass}`}>
                   {categoryConfig[activeModalActivity.category].label}
                 </Badge>
-                <Badge className="bg-red-600 text-white text-xs font-bold">
+                <Badge className="bg-sky-600 text-white text-xs font-bold">
                   +{activeModalActivity.drlPoints} ĐRL
                 </Badge>
               </div>
@@ -454,7 +454,7 @@ export function ExtracurricularView() {
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Mục tiêu ĐRL:</span>
-                <span className="font-medium text-red-600 dark:text-red-400">{activeModalActivity.drlCriterion}</span>
+                <span className="font-medium text-sky-600 dark:text-sky-400">{activeModalActivity.drlCriterion}</span>
               </div>
             </div>
 
@@ -498,7 +498,7 @@ export function ExtracurricularView() {
                 className={`rounded-xl text-xs font-semibold ${
                   activeModalActivity.registered
                     ? 'bg-muted text-foreground hover:bg-rose-100 dark:hover:bg-rose-950/60 hover:text-rose-600'
-                    : 'bg-red-700 hover:bg-red-800 text-white'
+                    : 'bg-sky-600 hover:bg-sky-700 text-white'
                 }`}
               >
                 {activeModalActivity.registered ? 'Hủy đăng ký' : 'Xác nhận Đăng ký (+ĐRL)'}

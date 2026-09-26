@@ -57,7 +57,7 @@ export function MockApiControlBar() {
               onClick={() => handleToggleMode('mock')}
               className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
                 mode === 'mock'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs'
+                  ? 'bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-700 text-white shadow-xs'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
@@ -69,7 +69,7 @@ export function MockApiControlBar() {
               onClick={() => handleToggleMode('backend')}
               className={`flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-semibold transition-colors ${
                 mode === 'backend'
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs'
+                  ? 'bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-700 text-white shadow-xs'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >

@@ -18,7 +18,7 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = ({ onSelectFeatur
     {
       id: 'courses' as const,
       icon: BookOpen,
-      color: 'from-blue-500 to-indigo-600',
+      color: 'from-sky-500 to-blue-600',
       badge: 'Quản Lý Học Phần',
       title: 'Học Phần & Chương Trình Đào Tạo',
       description:
@@ -48,7 +48,7 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = ({ onSelectFeatur
     {
       id: 'schedule' as const,
       icon: Calendar,
-      color: 'from-purple-500 to-pink-600',
+      color: 'from-cyan-500 to-blue-600',
       badge: 'Lịch Học Trực Quan',
       title: 'Thời Khóa Biểu Tuần Thông Minh',
       description:
@@ -62,7 +62,7 @@ export const FeaturesSection: React.FC<FeaturesSectionProps> = ({ onSelectFeatur
       <div className="container mx-auto max-w-7xl px-4 sm:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
-          <Badge variant="outline" className="px-3.5 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800">
+          <Badge variant="outline" className="px-3.5 py-1 text-xs font-semibold text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-800 bg-sky-50/70 dark:bg-sky-950/40">
             Hệ Thống Phân Hệ
           </Badge>
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">

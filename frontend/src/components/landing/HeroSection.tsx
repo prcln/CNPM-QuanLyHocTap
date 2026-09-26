@@ -18,16 +18,16 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onEnterPortal }) => {
   return (
     <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28 border-b">
       {/* Background Glows & Patterns */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-blue-500/15 via-indigo-500/15 to-purple-500/10 blur-3xl pointer-events-none -z-10 rounded-full" />
-      <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/10 blur-3xl pointer-events-none -z-10 rounded-full" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-gradient-to-tr from-sky-500/15 via-blue-600/15 to-teal-500/10 blur-3xl pointer-events-none -z-10 rounded-full" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/10 blur-3xl pointer-events-none -z-10 rounded-full" />
 
       <div className="container mx-auto max-w-7xl px-4 sm:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
           {/* Left Column: Hero Text Content */}
           <div className="lg:col-span-7 space-y-6 text-center lg:text-left">
             {/* Pill Badge */}
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-indigo-200 dark:border-indigo-800/80 bg-indigo-50/70 dark:bg-indigo-950/40 text-xs font-semibold text-indigo-700 dark:text-indigo-300 shadow-xs">
-              <Sparkles className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-sky-200 dark:border-sky-800/80 bg-sky-50/70 dark:bg-sky-950/40 text-xs font-semibold text-sky-700 dark:text-sky-300 shadow-xs">
+              <Sparkles className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 animate-pulse" />
               <span>Nền Tảng Quản Trị Học Tập Thế Hệ Mới 2026</span>
             </div>
 
@@ -49,7 +49,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onEnterPortal }) => {
               <Button
                 size="lg"
                 onClick={onEnterPortal}
-                className="w-full sm:w-auto h-12 px-8 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold shadow-lg shadow-indigo-500/25 group transition-all"
+                className="w-full sm:w-auto h-12 px-8 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-700 hover:from-sky-700 hover:to-blue-700 text-white font-semibold shadow-lg shadow-sky-500/25 group transition-all"
               >
                 <span>Bắt Đầu Với Cổng Sinh Viên</span>
                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
@@ -85,11 +85,11 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onEnterPortal }) => {
 
           {/* Right Column: Interactive Visual Showcase */}
           <div className="lg:col-span-5 relative">
-            <div className="relative mx-auto max-w-md rounded-2xl border border-border/80 bg-card/80 p-6 shadow-2xl backdrop-blur-xl transition-all duration-300 hover:shadow-indigo-500/10">
+            <div className="relative mx-auto max-w-md rounded-2xl border border-border/80 bg-card/80 p-6 shadow-2xl backdrop-blur-xl transition-all duration-300 hover:shadow-sky-500/10">
               {/* Header card */}
               <div className="flex items-center justify-between pb-4 border-b border-border/60">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-sky-500 to-blue-600 flex items-center justify-center text-white font-bold text-sm shadow-sm">
                     SV
                   </div>
                   <div>
@@ -107,7 +107,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onEnterPortal }) => {
                 {/* GPA snapshot */}
                 <div className="p-3.5 rounded-xl bg-muted/40 border border-border/50 flex items-center justify-between">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                    <div className="p-2 rounded-lg bg-sky-500/10 text-sky-600 dark:text-sky-400">
                       <Award className="h-5 w-5" />
                     </div>
                     <div>
@@ -116,7 +116,7 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onEnterPortal }) => {
                     </div>
                   </div>
                   <div className="text-right">
-                    <Badge variant="outline" className="text-[10px] text-indigo-600 dark:text-indigo-400 border-indigo-300">
+                    <Badge variant="outline" className="text-[10px] text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-800">
                       Xuất Sắc
                     </Badge>
                     <p className="text-[11px] text-muted-foreground mt-0.5">8.92 Hệ 10</p>

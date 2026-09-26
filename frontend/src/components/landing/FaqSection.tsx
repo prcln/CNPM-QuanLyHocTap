@@ -46,7 +46,7 @@ export const FaqSection: React.FC = () => {
     <section id="faq" className="py-16 md:py-24 border-b">
       <div className="container mx-auto max-w-5xl px-4 sm:px-8">
         <div className="text-center space-y-4 mb-14">
-          <Badge variant="outline" className="px-3.5 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800">
+          <Badge variant="outline" className="px-3.5 py-1 text-xs font-semibold text-sky-700 dark:text-sky-300 border-sky-300 dark:border-sky-800 bg-sky-50/70 dark:bg-sky-950/40">
             Hỏi Đáp & Quy Chế Đào Tạo
           </Badge>
           <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-foreground">
@@ -70,7 +70,7 @@ export const FaqSection: React.FC = () => {
                   className="w-full p-5 sm:p-6 text-left flex items-center justify-between gap-4 font-semibold text-foreground hover:text-primary transition-colors"
                 >
                   <div className="flex items-center gap-3">
-                    <HelpCircle className="h-5 w-5 text-indigo-500 shrink-0" />
+                    <HelpCircle className="h-5 w-5 text-sky-600 dark:text-sky-400 shrink-0" />
                     <span className="text-base sm:text-lg">{faq.question}</span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">

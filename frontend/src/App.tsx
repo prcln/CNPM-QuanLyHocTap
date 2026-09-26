@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { LandingPage } from '@/components/landing/LandingPage'
@@ -20,15 +20,14 @@ export default function App() {
   const [view, setView] = useState<'landing' | 'portal'>('portal')
   const [activeTab, setActiveTab] = useState<PortalTab>('overview')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
-  const [isDark, setIsDark] = useState(false)
+  const [isDark, setIsDark] = useState(() => {
+    if (typeof document !== 'undefined') {
+      return document.documentElement.classList.contains('dark')
+    }
+    return false
+  })
 
   const { data: stats } = useStudyStats()
-
-  // Initialize theme from system or class
-  useEffect(() => {
-    const isDarkTheme = document.documentElement.classList.contains('dark')
-    setIsDark(isDarkTheme)
-  }, [])
 
   const toggleDarkMode = () => {
     setIsDark((prev) => {

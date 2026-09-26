@@ -86,7 +86,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {/* Student Profile Card Header */}
       <div className="p-4 border-b">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 via-blue-600 to-cyan-700 flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0">
             NA
           </div>
           {!isCollapsed && (
@@ -117,7 +117,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               onClick={() => onSelectTab(item.id)}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                 isActive
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-indigo-500/20'
+                  ? 'bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-700 text-white shadow-md shadow-sky-600/25'
                   : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
               }`}
               title={isCollapsed ? item.label : undefined}
