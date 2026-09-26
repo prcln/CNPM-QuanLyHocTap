@@ -1,8 +1,5 @@
 import { mockDb, sleep, getSimulatedLatency, setSimulatedLatency } from './mockDb'
-<<<<<<< HEAD
-=======
 import { apiClient } from './client'
->>>>>>> develop
 import type {
   Course,
   Assignment,
@@ -10,17 +7,11 @@ import type {
   StudyStats,
   CourseFilters,
   AssignmentFilters,
-<<<<<<< HEAD
-} from '@/types/student'
-
-=======
   ExtracurricularActivity,
   DrlSummary,
   ActivityCategory,
 } from '@/types/student'
 
-
->>>>>>> develop
 export const studentApi = {
   // Config & Administration
   getLatency: (): number => getSimulatedLatency(),
@@ -30,11 +21,6 @@ export const studentApi = {
     mockDb.resetAll()
   },
 
-<<<<<<< HEAD
-  // Courses API
-  courses: {
-    getAll: async (filters?: CourseFilters): Promise<Course[]> => {
-=======
   // Courses basic CRUD API (Compatible with API Contract /courses)
   courses: {
     getAll: async (filters?: CourseFilters): Promise<Course[]> => {
@@ -47,14 +33,11 @@ export const studentApi = {
           // Fallback to mock on network or 404/500 error
         }
       }
->>>>>>> develop
       await sleep()
       return mockDb.getCourses(filters)
     },
 
     getById: async (id: string): Promise<Course> => {
-<<<<<<< HEAD
-=======
       if (apiClient.getMode() === 'backend') {
         try {
           const res = await apiClient.request<{ data: Course } | Course>(`/courses/${id}`)
@@ -63,7 +46,6 @@ export const studentApi = {
           // Fallback
         }
       }
->>>>>>> develop
       await sleep()
       const course = mockDb.getCourseById(id)
       if (!course) {
@@ -73,8 +55,6 @@ export const studentApi = {
     },
 
     create: async (data: Omit<Course, 'id' | 'createdAt' | 'updatedAt'>): Promise<Course> => {
-<<<<<<< HEAD
-=======
       if (apiClient.getMode() === 'backend') {
         try {
           const res = await apiClient.request<{ data: Course } | Course>('/courses', {
@@ -86,7 +66,6 @@ export const studentApi = {
           // Fallback
         }
       }
->>>>>>> develop
       await sleep()
       return mockDb.createCourse(data)
     },
@@ -95,8 +74,6 @@ export const studentApi = {
       id: string,
       updates: Partial<Omit<Course, 'id' | 'createdAt'>>,
     ): Promise<Course> => {
-<<<<<<< HEAD
-=======
       if (apiClient.getMode() === 'backend') {
         try {
           const res = await apiClient.request<{ data: Course } | Course>(`/courses/${id}`, {
@@ -108,14 +85,11 @@ export const studentApi = {
           // Fallback
         }
       }
->>>>>>> develop
       await sleep()
       return mockDb.updateCourse(id, updates)
     },
 
     delete: async (id: string): Promise<{ success: boolean; id: string }> => {
-<<<<<<< HEAD
-=======
       if (apiClient.getMode() === 'backend') {
         try {
           await apiClient.request(`/courses/${id}`, { method: 'DELETE' })
@@ -124,7 +98,6 @@ export const studentApi = {
           // Fallback
         }
       }
->>>>>>> develop
       await sleep()
       const success = mockDb.deleteCourse(id)
       if (!success) {
@@ -134,11 +107,6 @@ export const studentApi = {
     },
   },
 
-<<<<<<< HEAD
-  // Assignments API
-  assignments: {
-    getAll: async (filters?: AssignmentFilters): Promise<Assignment[]> => {
-=======
   // Assignments basic CRUD API (Compatible with API Contract /assignments)
   assignments: {
     getAll: async (filters?: AssignmentFilters): Promise<Assignment[]> => {
@@ -151,14 +119,11 @@ export const studentApi = {
           // Fallback
         }
       }
->>>>>>> develop
       await sleep()
       return mockDb.getAssignments(filters)
     },
 
     create: async (data: Omit<Assignment, 'id' | 'createdAt'>): Promise<Assignment> => {
-<<<<<<< HEAD
-=======
       if (apiClient.getMode() === 'backend') {
         try {
           const res = await apiClient.request<{ data: Assignment } | Assignment>('/assignments', {
@@ -170,7 +135,6 @@ export const studentApi = {
           // Fallback
         }
       }
->>>>>>> develop
       await sleep()
       return mockDb.createAssignment(data)
     },
@@ -179,8 +143,6 @@ export const studentApi = {
       id: string,
       updates: Partial<Omit<Assignment, 'id' | 'createdAt'>>,
     ): Promise<Assignment> => {
-<<<<<<< HEAD
-=======
       if (apiClient.getMode() === 'backend') {
         try {
           const res = await apiClient.request<{ data: Assignment } | Assignment>(`/assignments/${id}`, {
@@ -192,7 +154,6 @@ export const studentApi = {
           // Fallback
         }
       }
->>>>>>> develop
       await sleep()
       return mockDb.updateAssignment(id, updates)
     },
@@ -203,8 +164,6 @@ export const studentApi = {
     },
 
     delete: async (id: string): Promise<{ success: boolean; id: string }> => {
-<<<<<<< HEAD
-=======
       if (apiClient.getMode() === 'backend') {
         try {
           await apiClient.request(`/assignments/${id}`, { method: 'DELETE' })
@@ -213,7 +172,6 @@ export const studentApi = {
           // Fallback
         }
       }
->>>>>>> develop
       await sleep()
       const success = mockDb.deleteAssignment(id)
       if (!success) {
@@ -223,11 +181,6 @@ export const studentApi = {
     },
   },
 
-<<<<<<< HEAD
-  // Grades API
-  grades: {
-    getAll: async (): Promise<GradeRecord[]> => {
-=======
   // Grades API (Compatible with API Contract /students/me/grades)
   grades: {
     getAll: async (): Promise<GradeRecord[]> => {
@@ -240,7 +193,6 @@ export const studentApi = {
           // Fallback
         }
       }
->>>>>>> develop
       await sleep()
       return mockDb.getGrades()
     },
@@ -254,8 +206,6 @@ export const studentApi = {
         finalExamScore: number
       },
     ): Promise<GradeRecord> => {
-<<<<<<< HEAD
-=======
       if (apiClient.getMode() === 'backend') {
         try {
           const res = await apiClient.request<{ data: GradeRecord } | GradeRecord>(`/classes/${id}/grades`, {
@@ -267,7 +217,6 @@ export const studentApi = {
           // Fallback
         }
       }
->>>>>>> develop
       await sleep()
       return mockDb.updateGrade(id, scores)
     },
@@ -276,8 +225,6 @@ export const studentApi = {
   // Study Stats API
   stats: {
     getOverview: async (): Promise<StudyStats> => {
-<<<<<<< HEAD
-=======
       if (apiClient.getMode() === 'backend') {
         try {
           const res = await apiClient.request<{ data: StudyStats } | StudyStats>('/reports/students/me')
@@ -286,20 +233,16 @@ export const studentApi = {
           // Fallback
         }
       }
->>>>>>> develop
       await sleep()
       return mockDb.getStats()
     },
   },
-<<<<<<< HEAD
-}
-=======
 
   // Extracurricular Activities & DRL API
   activities: {
     getAll: async (
       category?: ActivityCategory | 'all',
-      registeredOnly?: boolean
+      registeredOnly?: boolean,
     ): Promise<ExtracurricularActivity[]> => {
       await sleep()
       return mockDb.getActivities(category, registeredOnly)
@@ -316,5 +259,3 @@ export const studentApi = {
     },
   },
 }
-
->>>>>>> develop
