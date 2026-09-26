@@ -1,5 +1,5 @@
 import React from 'react'
-import { GraduationCap, Heart, Sparkles, BookOpen, Layers, Code2 } from 'lucide-react'
+import { Heart, Sparkles, BookOpen, Layers, Code2 } from 'lucide-react'
 
 export const Footer: React.FC = () => {
   return (
@@ -8,10 +8,12 @@ export const Footer: React.FC = () => {
         <div className="grid grid-cols-1 gap-8 md:grid-cols-4 lg:grid-cols-5">
           {/* Col 1: Brand info */}
           <div className="md:col-span-2 space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 text-white shadow-xs">
-                <GraduationCap className="h-5 w-5" />
-              </div>
+            <div className="flex items-center gap-3">
+              <img
+                src="/logo-icon.png"
+                alt="Logo CNPM QLHT"
+                className="h-10 w-auto object-contain shrink-0 drop-shadow-xs"
+              />
               <span className="font-bold text-base text-foreground tracking-tight">
                 CNPM • Quản Lý Học Tập
               </span>
