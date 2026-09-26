@@ -1,0 +1,203 @@
+# Kế Hoạch Triển Khai (Implementation Plan): Mục 2, Mục 3 & Mục 4
+
+Tài liệu này xác định lộ trình, kiến trúc và các bước kỹ thuật chi tiết để khắc phục toàn bộ các vấn đề thuộc:
+* **Mục 3**: Chuẩn hóa Thiết kế CSDL (ERD/DBML) và Hợp đồng API (`API_contract.md`).
+* **Mục 4**: Hoàn thiện Swagger OpenAPI và Xây dựng Khung Backend (`backend/`).
+* **Mục 2**: Đồng bộ hóa Mô hình Dữ liệu, Công thức Điểm và Phân quyền trên Frontend (`frontend/`).
+
+---
+
+## 🗺️ Lộ Trình Triển Khai Tổng Quan
+
+```mermaid
+graph TD
+    subgraph Phase 1: Chuẩn Hóa Thiết Kế & Hợp Đồng
+        P1_1[3.1 Sửa lỗi DBML Schema] --> P1_2[3.2 Chuẩn hóa API Contract]
+    end
+
+    subgraph Phase 2: Backend & Swagger OpenAPI
+        P1_2 --> P2_1[4.1 Mở rộng OpenAPI YAML đầy đủ 8 Modules]
+        P2_1 --> P2_2[4.2 Cấu trúc lại Backend Express Modular]
+        P2_2 --> P2_3[4.3 Bổ sung Middleware: Error, 404, Healthcheck]
+        P2_3 --> P2_4[4.4 Root Scripts chạy đồng thời FE + BE]
+    end
+
+    subgraph Phase 3: Frontend Data Sync & Auth
+        P1_2 --> P3_1[2.1 Chuẩn hóa công thức Điểm Quá Trình / Cuối Kỳ]
+        P3_1 --> P3_2[2.2 Tầng Adapter ánh xạ ERD Types sang UI ViewModels]
+        P3_2 --> P3_3[2.3 Mock Auth Context & Thanh chuyển Role SV/GV/AD]
+        P3_3 --> P3_4[2.4 Tối ưu TanStack Query & Áp dụng TanStack Table]
+    end
+```
+
+---
+
+## 📌 Giai Đoạn 1: Chuẩn Hóa CSDL & Hợp Đồng API (Mục 3)
+
+**Mục tiêu**: Xóa bỏ các lỗ hổng logic nghiệp vụ trong tài liệu CSDL và API contract để làm cơ sở vững chắc cho cả Frontend và Backend.
+
+### 1.1. Cập nhật [docs/erd_pseudo_code.dbml](file:///d:/Coding2026/CNPM%20-%20QLHT/docs/erd_pseudo_code.dbml)
+* [ ] **Thêm bảng Đăng ký lớp học (`dang_ky_lop`)**:
+  ```dbml
+  Table dang_ky_lop {
+    madk integer [pk, increment]
+    masv integer [not null]
+    malh integer [not null]
+    ngay_dang_ky timestamp [default: `now()`]
+    trang_thai varchar(50) [default: 'DangHoc', note: 'DangHoc, DaHuy, RutHocPhan']
+
+    indexes {
+      (masv, malh) [unique]
+    }
+  }
+  Ref: dang_ky_lop.masv > sinh_vien.masv
+  Ref: dang_ky_lop.malh > lop_hoc.malh
+  ```
+* [ ] **Sửa khóa ngoại tự tham chiếu trên `lop_hoc`**:
+  * Đổi `malh_lt integer [not null]` thành `malh_lt integer [null]` để cho phép tạo lớp lý thuyết độc lập.
+* [ ] **Đồng nhất kiểu dữ liệu giới tính**:
+  * Đổi `giang_vien.gioi_tinh bool` thành `giang_vien.gioi_tinh varchar(15)` đồng bộ với `sinh_vien`.
+* [ ] **Tránh tràn số CPA**:
+  * Đổi `sinh_vien.cpa decimal(3, 2)` thành `sinh_vien.cpa decimal(4, 2)`.
+* [ ] **Bổ sung trường Soft Delete**:
+  * Thêm `deletedAt timestamp [null]` cho các bảng: `tai_khoan`, `sinh_vien`, `giang_vien`, `hoc_phan`, `lop_hoc`, `bai_tap`, `nhom`.
+* [ ] **Bổ sung ràng buộc nhóm bài tập**:
+  * Ràng buộc sinh viên chỉ được tham gia 1 nhóm trong cùng 1 bài tập:
+  ```dbml
+  Table nhom_sv {
+    manhom integer [not null]
+    masv integer [not null]
+    indexes {
+      (manhom, masv) [pk]
+    }
+  }
+  ```
+
+### 1.2. Cập nhật [docs/API_contract.md](file:///d:/Coding2026/CNPM%20-%20QLHT/docs/API_contract.md)
+* [ ] **Xóa endpoint trùng lặp**: Xóa dòng duplicate `GET /classes/:malh/lecturers` (dòng 75-76).
+* [ ] **Chuẩn hóa danh từ số nhiều (RESTful)**: Đổi `/schedule/:malichhoc` thành `/schedules/:malichhoc`.
+* [ ] **Bổ sung API Đăng ký môn học cho Sinh viên**:
+  * `POST /students/me/classes/:malh`: Đăng ký vào lớp học.
+  * `DELETE /students/me/classes/:malh`: Hủy đăng ký / rút học phần.
+
+---
+
+## 📌 Giai Đoạn 2: Hoàn Thiện Swagger & Cấu Trúc Backend (Mục 4)
+
+**Mục tiêu**: Xây dựng khung mã nguồn backend hoàn chỉnh với Express 5, định tuyến OpenAPI Swagger đầy đủ 8 module để đội ngũ phát triển có thể kiểm thử API trực quan.
+
+### 2.1. Hoàn thiện [docs/api_doc_openapi.yaml](file:///d:/Coding2026/CNPM%20-%20QLHT/docs/api_doc_openapi.yaml)
+* [ ] Bổ sung đầy đủ 8 tags và các endpoints cốt lõi:
+  1. `Tài khoản`: `/auth/login`, `/auth/logout`, `/auth/me`, `/accounts`
+  2. `Sinh viên`: `/students/me`, `/students`, `/students/:masv`
+  3. `Giảng viên`: `/lecturers/me`, `/lecturers`, `/lecturers/:magv/classes`
+  4. `Học phần`: `/courses`, `/courses/:mahp`
+  5. `Lớp học`: `/classes`, `/classes/:malh`, `/classes/:malh/students`, `/classes/:malh/lecturers`
+  6. `Điểm`: `/students/me/grades`, `/classes/:malh/grades`, `/classes/:malh/grades/:masv`
+  7. `Thời khóa biểu`: `/students/me/schedule`, `/classes/:malh/schedule`, `/schedules/:malichhoc`
+  8. `Bài tập & Nhóm`: `/classes/:malh/assignments`, `/assignments/:mabt/groups`, `/groups/:manhom/members`
+
+### 2.2. Tái cấu trúc Backend thành Modular Architecture
+* [ ] Tạo cấu trúc thư mục chuẩn trong `backend/src`:
+  ```text
+  backend/src/
+  ├── config/             # Biến môi trường, constants
+  ├── middlewares/        # Error handler, logging, auth guard stub
+  │   ├── errorHandler.ts
+  │   └── notFound.ts
+  ├── routes/             # Định tuyến API v1
+  │   ├── index.ts        # Ghép toàn bộ routers vào /api/v1
+  │   ├── auth.routes.ts
+  │   ├── student.routes.ts
+  │   ├── lecturer.routes.ts
+  │   ├── course.routes.ts
+  │   ├── class.routes.ts
+  │   └── grade.routes.ts
+  ├── app.ts              # Cấu hình Express, CORS, Swagger, Routes, Middlewares
+  └── server.ts           # Khởi động HTTP server
+  ```
+* [ ] Bổ sung route kiểm tra trạng thái dịch vụ: `GET /health` (trả về status 200, uptime, timestamp).
+
+### 2.3. Tích hợp Workspace Monorepo
+* [ ] Tạo `package.json` tại thư mục gốc dự án:
+  * Cài đặt `concurrently` (dev dependency).
+  * Khai báo script:
+    ```json
+    {
+      "scripts": {
+        "dev": "concurrently \"pnpm --prefix frontend dev\" \"npm --prefix backend run dev\"",
+        "build": "pnpm --prefix frontend build && npm --prefix backend run build"
+      }
+    }
+    ```
+
+---
+
+## 📌 Giai Đoạn 3: Đồng Bộ Dữ Liệu, Công Thức Điểm & Phân Quyền Frontend (Mục 2)
+
+**Mục tiêu**: Loại bỏ xung đột giữa Frontend và Backend bằng cách cập nhật công thức tính điểm chuẩn HUST, xây dựng tầng Adapter chuyển đổi dữ liệu và hỗ trợ chuyển đổi Role.
+
+### 3.1. Sửa Công Thức Tính Điểm ([frontend/src/lib/score.utils.ts](file:///d:/Coding2026/CNPM%20-%20QLHT/frontend/src/lib/score.utils.ts))
+* [ ] Chuyển công thức tính điểm từ 4 đầu điểm cứng sang mô hình Quá trình (`diem_qt`) và Cuối kỳ (`diem_ck`):
+  ```typescript
+  export const calculateHustGrade = (
+    diemQt: number,
+    diemCk: number,
+    trongSoQt = 0.4 // Mặc định 0.4 hoặc lấy từ lop_hoc.trongso_qt
+  ) => {
+    const trongSoCk = 1 - trongSoQt
+    const diemHpSo = Math.round((diemQt * trongSoQt + diemCk * trongSoCk) * 10) / 10
+
+    // Quy đổi điểm chữ theo thang HUST
+    let diemChu = 'F'
+    let diemHp4 = 0.0
+
+    if (diemHpSo >= 9.0) { diemChu = 'A+'; diemHp4 = 4.0 }
+    else if (diemHpSo >= 8.5) { diemChu = 'A'; diemHp4 = 3.7 } // hoặc 4.0 tùy quy chế
+    else if (diemHpSo >= 8.0) { diemChu = 'B+'; diemHp4 = 3.5 }
+    else if (diemHpSo >= 7.0) { diemChu = 'B'; diemHp4 = 3.0 }
+    else if (diemHpSo >= 6.5) { diemChu = 'C+'; diemHp4 = 2.5 }
+    else if (diemHpSo >= 5.5) { diemChu = 'C'; diemHp4 = 2.0 }
+    else if (diemHpSo >= 5.0) { diemChu = 'D+'; diemHp4 = 1.5 }
+    else if (diemHpSo >= 4.0) { diemChu = 'D'; diemHp4 = 1.0 }
+    else { diemChu = 'F'; diemHp4 = 0.0 }
+
+    return { diemHpSo, diemHp4, diemChu }
+  }
+  ```
+* [ ] Cập nhật giao diện bảng điểm trong [GradeTracker.tsx](file:///d:/Coding2026/CNPM%20-%20QLHT/frontend/src/components/grades/GradeTracker.tsx) với các cột:
+  * Điểm Quá Trình (có hiển thị trọng số, vd: 40%).
+  * Điểm Cuối Kỳ (60%).
+  * Điểm Tổng Kết Hệ 10.
+  * Điểm Chữ & Điểm Hệ 4.
+
+### 3.2. Xây Dựng Tầng Adapter & Đồng Bộ Types
+* [ ] Cập nhật [frontend/src/types/index.ts](file:///d:/Coding2026/CNPM%20-%20QLHT/frontend/src/types/index.ts) để đồng bộ 1:1 với CSDL sau khi sửa ở Giai đoạn 1.
+* [ ] Tạo `frontend/src/lib/adapters/classCourseAdapter.ts`:
+  * Hàm `adaptClassToCourseView(lopHoc: ILopHoc, hocPhan: IHocPhan, lichHoc: ILichHoc[]): Course`
+  * Cho phép UI hiện tại tiếp tục hoạt động mà không bị vỡ giao diện trong khi nguồn dữ liệu bên dưới đã tuân thủ chuẩn backend.
+
+### 3.3. Tạo Mock Auth Context & Thanh Chuyển Role (Role Switcher)
+* [ ] Tạo `frontend/src/contexts/AuthContext.tsx`:
+  * Quản lý user hiện tại (`SV`, `GV`, `AD`).
+  * Cung cấp các user mẫu:
+    * Sinh viên: MSSV `20210001` - Nguyễn Văn A
+    * Giảng viên: MAGV `1001` - TS. Trần Văn B
+    * Quản trị viên: `admin`
+* [ ] Bổ sung thanh chọn Role trên Header của [App.tsx](file:///d:/Coding2026/CNPM%20-%20QLHT/frontend/src/App.tsx) để mô phỏng phân quyền người dùng xem TKB, nhập điểm hoặc quản lý danh sách học phần.
+
+### 3.4. Tối Ưu Hóa TanStack Query & Áp Dụng TanStack Table
+* [ ] Bổ sung `useDebounce` (300ms) cho thanh tìm kiếm ở `CourseList.tsx` và `AssignmentList.tsx`.
+* [ ] Nâng cấp bảng điểm `GradeTracker` dùng `@tanstack/react-table` (đã có sẵn trong `node_modules`):
+  * Cung cấp chức năng sắp xếp theo Điểm hệ 10 / Điểm hệ 4 / Tên môn.
+  * Lọc theo học kỳ hoặc trạng thái qua môn.
+
+---
+
+## 🧪 Ma Trận Kiểm Thử & Tiêu Chí Nghiệm Thu (Acceptance Criteria)
+
+| Hạng mục | Tiêu chí nghiệm thu | Cách kiểm chứng |
+| :--- | :--- | :--- |
+| **Giai đoạn 1** | File `erd_pseudo_code.dbml` và `API_contract.md` nhất quán, có bảng `dang_ky_lop`, hỗ trợ `malh_lt null`, có `deletedAt`. | Review file markdown & DBML validator. |
+| **Giai đoạn 2** | Backend Swagger hiển thị đầy đủ 8 module tại `http://localhost:3000/api/docs`. Route `/health` trả về 200 OK. | Chạy `npm run dev` tại root, mở trình duyệt kiểm tra Swagger UI. |
+| **Giai đoạn 3** | Điểm số hiển thị đúng chuẩn quá trình + cuối kỳ theo trọng số. Bảng điểm có tính năng sort/filter qua TanStack Table. Có nút đổi Role SV/GV/AD. | Chạy `pnpm build`, kiểm tra tương tác thực tế trên giao diện web. |
