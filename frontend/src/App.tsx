@@ -8,6 +8,7 @@ import {
   Sun,
   Moon,
   Database,
+  User,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,8 +19,9 @@ import { GradeTracker } from '@/components/grades/GradeTracker'
 import { ScheduleView } from '@/components/schedule/ScheduleView'
 import { MockApiControlBar } from '@/components/shared/MockApiControlBar'
 import { useStudyStats } from '@/hooks/useStudyStats'
+import  ProfileSetting from '@/components/profile/ProfileSetting' 
 
-type TabType = 'courses' | 'assignments' | 'grades' | 'schedule'
+type TabType = 'courses' | 'assignments' | 'grades' | 'schedule' | 'profile' 
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('courses')
@@ -44,6 +46,7 @@ export default function App() {
     { id: 'assignments', label: 'Bài Tập & Deadline', icon: CheckSquare, badgeCount: stats?.pendingAssignments },
     { id: 'grades', label: 'Bảng Điểm & GPA', icon: Award },
     { id: 'schedule', label: 'Thời Khóa Biểu', icon: Calendar },
+    { id: 'profile', label: 'Tài Khoản & Profile', icon: User },
   ]
 
   return (
@@ -209,6 +212,7 @@ export default function App() {
             {activeTab === 'assignments' && <AssignmentList />}
             {activeTab === 'grades' && <GradeTracker />}
             {activeTab === 'schedule' && <ScheduleView />}
+            {activeTab === 'profile' && <ProfileSetting />}
           </div>
         </section>
       </main>

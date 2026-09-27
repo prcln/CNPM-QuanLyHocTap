@@ -1,4 +1,4 @@
-import { mockDb, sleep, getSimulatedLatency, setSimulatedLatency } from './mockDb'
+import { mockDb, sleep, getSimulatedLatency, setSimulatedLatency, type StudentProfile} from './mockDb'
 import type {
   Course,
   Assignment,
@@ -119,4 +119,16 @@ export const studentApi = {
       return mockDb.getStats()
     },
   },
+
+  // Profile API
+  profile: {
+  get: async (): Promise<StudentProfile> => {
+    await sleep()
+    return mockDb.profile.get()
+  },
+  update: async (updates: Partial<StudentProfile>): Promise<StudentProfile> => {
+    await sleep()
+    return mockDb.profile.update(updates)
+  },
+},
 }

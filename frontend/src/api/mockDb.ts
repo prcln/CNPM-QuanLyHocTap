@@ -5,10 +5,37 @@ import { calculateGradeDetail } from '@/lib/score.utils'
 const STORAGE_KEY = 'cnpm_qlht_store_v1'
 const LATENCY_KEY = 'cnpm_qlht_latency_ms'
 
+//them interface profile
+export interface StudentProfile {
+  id: string;
+  fullName: string;
+  studentId: string;
+  cohort: string;
+  major: string;
+  email: string;
+  phone: string;
+  cpa: number;
+  avatarUrl: string;
+}
+
+//profile mac dinh
+const INITIAL_PROFILE: StudentProfile = {
+  id: "1",
+  fullName: "Vũ Duy Nhật Hào",
+  studentId: "20245678",
+  cohort: "K69",
+  major: "Kỹ thuật hóa học",
+  email: "hao.vd245678@sis.hust.edu.vn",
+  phone: "0912345678",
+  cpa: 3.6,
+  avatarUrl: "",
+}
+
 interface DbSchema {
   courses: Course[]
   assignments: Assignment[]
   grades: GradeRecord[]
+  profile: StudentProfile
 }
 
 // In-memory fallback
@@ -16,6 +43,7 @@ let inMemoryDb: DbSchema = {
   courses: [...INITIAL_COURSES],
   assignments: [...INITIAL_ASSIGNMENTS],
   grades: [...INITIAL_GRADES],
+  profile: { ...INITIAL_PROFILE },
 }
 
 // Latency management
@@ -69,8 +97,26 @@ export const mockDb = {
       courses: JSON.parse(JSON.stringify(INITIAL_COURSES)),
       assignments: JSON.parse(JSON.stringify(INITIAL_ASSIGNMENTS)),
       grades: JSON.parse(JSON.stringify(INITIAL_GRADES)),
+      profile: JSON.parse(JSON.stringify(INITIAL_PROFILE)),
     }
     saveDb(fresh)
+  },
+
+  //profile CRUD
+  profile: {
+    get: (): StudentProfile => {
+      const db = loadDb()
+      return db.profile || INITIAL_PROFILE
+    },
+    update: (updates: Partial<StudentProfile>): StudentProfile => {
+      const db = loadDb()
+      db.profile = {
+        ...(db.profile || INITIAL_PROFILE),
+        ...updates,
+      }
+      saveDb(db)
+      return db.profile
+    },
   },
 
   // Courses CRUD
