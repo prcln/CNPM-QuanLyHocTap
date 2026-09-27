@@ -1,56 +1,55 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
-
-export interface ISinhVien {
-  id: string;
-  fullName: string;
-  studentId: string;
-  cohort: string;
-  major: string;
-  email: string;
-  phone: string;
-  cpa: number;
-  avatarUrl: string;
-}
-
-const initialProfileData: ISinhVien = {
-  id: "1",
-  fullName: "Vũ Duy Nhật Hào",
-  studentId: "20245678",
-  cohort: "K69",
-  major: "Computer Science",
-  email: "hao.vd245678@sis.hust.edu.vn",
-  phone: "0912345678",
-  cpa: 3.6,
-  avatarUrl: "https://www.google.com/imgres?q=l%C3%A1%20phong&imgurl=https%3A%2F%2Fwineandfood.vn%2Fimage%2Fcatalog%2Fanh-bai-viet%2Fcac-loai-thuc-pham-khac%2Fsiro-cay-la-phong%2Fchiec-la-phong.jpg&imgrefurl=https%3A%2F%2Fwineandfood.vn%2Fnhung-su-that-ve-cay-la-phong-khong-phai-ai-cung-biet.html&docid=BupWzr2fi3FnyM&tbnid=ABZ01fBpB1WC_M&vet=12ahUKEwjv5ub53o6XAxU_WOsIHeyDFHMQnPAOegQIPxAA..i&w=837&h=906&hcb=2&ved=2ahUKEwjv5ub53o6XAxU_WOsIHeyDFHMQnPAOegQIPxAA",
-};
+import { Camera } from "lucide-react";
+import { mockDb, type StudentProfile } from "@/api/mockDb";
 
 export default function ProfileSetting() {
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState<ISinhVien>(initialProfileData);
-  const [formData, setFormData] = useState<ISinhVien>(initialProfileData);
+  const [profile, setProfile] = useState<StudentProfile | null>(null);
+  const [formData, setFormData] = useState<StudentProfile | null>(null);
   const [loading, setLoading] = useState(false);
+
+  // Load dữ liệu từ mockDb ngay khi component được render lần đầu
+  useEffect(() => {
+    const currentProfile = mockDb.profile.get();
+    setProfile(currentProfile);
+    setFormData(currentProfile);
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    setFormData((prev) => (prev ? { ...prev, [name]: value } : null));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const localUrl = URL.createObjectURL(file);
+      setFormData((prev) => (prev ? { ...prev, avatarUrl: localUrl } : null));
+    }
   };
 
   const handleCancel = () => {
-    setFormData(profile);
+    if (profile) setFormData(profile);
     setIsEditing(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData) return;
     setLoading(true);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      setProfile(formData);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      
+      // LƯU VÀO MOCKDB 
+      const updated = mockDb.profile.update(formData);
+      
+      setProfile(updated);
+      setFormData(updated);
       setIsEditing(false);
       alert("Cập nhật thông tin thành công!");
     } catch (error) {
@@ -60,6 +59,8 @@ export default function ProfileSetting() {
       setLoading(false);
     }
   };
+
+  if (!profile || !formData) return null;
 
   return (
     <div className="max-w-4xl mx-auto p-6">
@@ -81,11 +82,27 @@ export default function ProfileSetting() {
         <form onSubmit={handleSubmit}>
           <CardContent className="pt-6 space-y-6">
             <div className="flex flex-col sm:flex-row items-center gap-6 pb-6 border-b">
-              <img
-                src={profile.avatarUrl}
-                alt="Avatar"
-                className="w-24 h-24 rounded-full border-2 border-primary object-cover shadow-md"
-              />
+              <div className="relative group">
+                <img
+                  src={isEditing ? formData.avatarUrl : profile.avatarUrl}
+                  alt="Avatar"
+                  className="w-24 h-24 rounded-full border-2 border-primary object-cover shadow-md"
+                />
+                
+                {isEditing && (
+                  <label className="absolute inset-0 flex flex-col items-center justify-center bg-black/50 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-xs font-medium">
+                    <Camera className="h-5 w-5 mb-0.5" />
+                    <span>Đổi ảnh</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleFileChange}
+                    />
+                  </label>
+                )}
+              </div>
+
               <div className="text-center sm:text-left space-y-1">
                 <h3 className="text-xl font-semibold">{profile.fullName}</h3>
                 <p className="text-sm text-muted-foreground">{profile.email}</p>
