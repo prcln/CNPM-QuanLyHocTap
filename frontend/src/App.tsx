@@ -14,6 +14,10 @@ import { MockApiControlBar } from '@/components/shared/MockApiControlBar'
 import { useStudyStats } from '@/hooks/useStudyStats'
 import { Badge } from '@/components/ui/badge'
 import { BookOpen, CheckSquare, Award, Calendar, LayoutDashboard, Flame } from 'lucide-react'
+import LoginPage from '@/pages/LoginPage'
+import RegisterPage from '@/pages/RegisterPage'
+import { getAuthUser } from '@/services/auth'
+import type { AuthUser } from '@/types/auth'
 
 
 export default function App() {
@@ -28,6 +32,20 @@ export default function App() {
   })
 
   const { data: stats } = useStudyStats()
+
+  if (!authUser) {
+    return authView === 'login' ? (
+      <LoginPage
+        onLoginSuccess={setAuthUser}
+        onSwitchToRegister={() => setAuthView('register')}
+      />
+    ) : (
+      <RegisterPage
+        onRegisterSuccess={setAuthUser}
+        onSwitchToLogin={() => setAuthView('login')}
+      />
+    )
+  }
 
   const toggleDarkMode = () => {
     setIsDark((prev) => {
@@ -168,9 +186,9 @@ export default function App() {
               {activeTab === 'activities' && <ExtracurricularView />}
             </div>
           </main>
+
         </div>
       )}
     </div>
   )
 }
-
