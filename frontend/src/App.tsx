@@ -8,6 +8,7 @@ import {
   Sun,
   Moon,
   Database,
+  LogOut,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -18,14 +19,39 @@ import { GradeTracker } from '@/components/grades/GradeTracker'
 import { ScheduleView } from '@/components/schedule/ScheduleView'
 import { MockApiControlBar } from '@/components/shared/MockApiControlBar'
 import { useStudyStats } from '@/hooks/useStudyStats'
+import LoginPage from '@/pages/LoginPage'
+import RegisterPage from '@/pages/RegisterPage'
+import { getAuthUser, clearAuthUser } from '@/services/auth'
+import type { AuthUser } from '@/types/auth'
 
 type TabType = 'courses' | 'assignments' | 'grades' | 'schedule'
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<TabType>('courses')
   const [isDark, setIsDark] = useState(false)
+  const [authView, setAuthView] = useState<'login' | 'register'>('login')
+  const [authUser, setAuthUser] = useState<AuthUser | null>(() => getAuthUser())
+
+  const handleLogout = () => {
+    clearAuthUser()
+    setAuthUser(null)
+  }
 
   const { data: stats } = useStudyStats()
+
+  if (!authUser) {
+    return authView === 'login' ? (
+      <LoginPage
+        onLoginSuccess={setAuthUser}
+        onSwitchToRegister={() => setAuthView('register')}
+      />
+    ) : (
+      <RegisterPage
+        onRegisterSuccess={setAuthUser}
+        onSwitchToLogin={() => setAuthView('login')}
+      />
+    )
+  }
 
   const toggleDarkMode = () => {
     setIsDark((prev) => {
@@ -84,6 +110,17 @@ export default function App() {
               aria-label="Toggle theme"
             >
               {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4 text-slate-700" />}
+            </Button>
+
+            {/* Nút đăng xuất */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleLogout}
+              className="h-9 w-9 rounded-lg"
+              aria-label="Đăng xuất"
+            >
+              <LogOut className="h-4 w-4" />
             </Button>
           </div>
         </div>
