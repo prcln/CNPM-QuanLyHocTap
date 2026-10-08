@@ -31,6 +31,9 @@ export default function App() {
     return false
   })
 
+  const [authView, setAuthView] = useState<'login' | 'register'>('login')
+  const [authUser, setAuthUser] = useState<AuthUser | null>(() => getAuthUser())
+
   const { data: stats } = useStudyStats()
 
   if (!authUser) {
