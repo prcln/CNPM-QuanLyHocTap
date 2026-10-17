@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { LandingPage } from '@/components/landing/LandingPage'
+import { LoginPage } from '@/components/auth/LoginPage'
 import { Sidebar } from '@/components/portal/Sidebar'
 import type { PortalTab } from '@/components/portal/Sidebar'
 import { OverviewDashboard } from '@/components/portal/OverviewDashboard'
@@ -15,9 +16,10 @@ import { useStudyStats } from '@/hooks/useStudyStats'
 import { Badge } from '@/components/ui/badge'
 import { BookOpen, CheckSquare, Award, Calendar, LayoutDashboard, Flame } from 'lucide-react'
 
+export type AppView = 'landing' | 'portal' | 'login'
 
 export default function App() {
-  const [view, setView] = useState<'landing' | 'portal'>('portal')
+  const [view, setView] = useState<AppView>('portal')
   const [activeTab, setActiveTab] = useState<PortalTab>('overview')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isDark, setIsDark] = useState(() => {
@@ -99,18 +101,37 @@ export default function App() {
         toggleDarkMode={toggleDarkMode}
         activeView={view}
         onNavigateHome={handleNavigateHome}
+        onNavigateLogin={() => setView('login')}
       />
 
       {/* View 1: Landing Page */}
-      {view === 'landing' ? (
+      {view === 'landing' && (
         <>
           <main className="flex-1">
-            <LandingPage onEnterPortal={handleEnterPortal} />
+            <LandingPage
+              onEnterPortal={handleEnterPortal}
+              onNavigateLogin={() => setView('login')}
+            />
           </main>
           <Footer />
         </>
-      ) : (
-        /* View 2: Student Portal with Sidebar Dashboard */
+      )}
+
+      {/* View 2: Login Page */}
+      {view === 'login' && (
+        <>
+          <main className="flex-1">
+            <LoginPage
+              onSuccess={() => handleEnterPortal('overview')}
+              onBackToLanding={handleNavigateHome}
+            />
+          </main>
+          <Footer />
+        </>
+      )}
+
+      {/* View 3: Student Portal with Sidebar Dashboard */}
+      {view === 'portal' && (
         <div className="flex-1 flex overflow-hidden">
           {/* Left Sidebar */}
           <Sidebar
@@ -119,6 +140,7 @@ export default function App() {
             isCollapsed={isSidebarCollapsed}
             onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
             onNavigateLanding={handleNavigateHome}
+            onNavigateLogin={() => setView('login')}
             stats={{
               totalCourses: stats?.totalCourses || 0,
               pendingAssignments: stats?.pendingAssignments || 0,

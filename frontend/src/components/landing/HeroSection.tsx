@@ -6,15 +6,17 @@ import {
   Award,
   Sparkles,
   Clock,
+  LogIn,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
 interface HeroSectionProps {
   onEnterPortal: () => void
+  onNavigateLogin?: () => void
 }
 
-export const HeroSection: React.FC<HeroSectionProps> = ({ onEnterPortal }) => {
+export const HeroSection: React.FC<HeroSectionProps> = ({ onEnterPortal, onNavigateLogin }) => {
   return (
     <section className="relative overflow-hidden pt-12 pb-20 md:pt-20 md:pb-28 border-b">
       {/* Background Glows & Patterns */}
@@ -45,23 +47,35 @@ export const HeroSection: React.FC<HeroSectionProps> = ({ onEnterPortal }) => {
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-3.5 pt-2">
               <Button
                 size="lg"
                 onClick={onEnterPortal}
-                className="w-full sm:w-auto h-12 px-8 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-700 hover:from-sky-700 hover:to-blue-700 text-white font-semibold shadow-lg shadow-sky-500/25 group transition-all"
+                className="w-full sm:w-auto h-12 px-7 rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-700 hover:from-sky-700 hover:to-blue-700 text-white font-semibold shadow-lg shadow-sky-500/25 group transition-all cursor-pointer"
               >
                 <span>Bắt Đầu Với Cổng Sinh Viên</span>
                 <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               </Button>
 
-              <a href="#features" className="w-full sm:w-auto">
+              {onNavigateLogin && (
                 <Button
                   size="lg"
                   variant="outline"
-                  className="w-full sm:w-auto h-12 px-6 rounded-xl border-border/80 hover:bg-accent font-medium"
+                  onClick={onNavigateLogin}
+                  className="w-full sm:w-auto h-12 px-6 rounded-xl border-border/80 hover:bg-accent font-semibold cursor-pointer"
                 >
-                  Khám Phá Các Phân Hệ
+                  <LogIn className="mr-2 h-4 w-4 text-primary" />
+                  <span>Đăng Nhập Tài Khoản</span>
+                </Button>
+              )}
+
+              <a href="#features" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  variant="ghost"
+                  className="w-full sm:w-auto h-12 px-5 rounded-xl hover:bg-muted/80 font-medium cursor-pointer"
+                >
+                  Khám Phá Tính Năng
                 </Button>
               </a>
             </div>
