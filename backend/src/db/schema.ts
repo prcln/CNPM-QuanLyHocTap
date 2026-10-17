@@ -13,6 +13,29 @@ export const taiKhoan = pgTable("tai_khoan", {
   deletedBy: integer("deleted_by"),
 });
 
+// 1.1 Refresh Tokens (Quản lý phiên đăng nhập và xoay vòng Refresh Token)
+export const refreshTokens = pgTable("refresh_tokens", {
+  id: serial("id").primaryKey(),
+  matk: integer("matk").notNull().references(() => taiKhoan.matk, { onDelete: "cascade" }),
+  tokenHash: varchar("token_hash", { length: 255 }).notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  revokedAt: timestamp("revoked_at"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  userAgent: varchar("user_agent", { length: 255 }),
+  ipAddress: varchar("ip_address", { length: 45 }),
+});
+
+export const taiKhoanRelations = relations(taiKhoan, ({ many }) => ({
+  refreshTokens: many(refreshTokens),
+}));
+
+export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
+  taiKhoan: one(taiKhoan, {
+    fields: [refreshTokens.matk],
+    references: [taiKhoan.matk],
+  }),
+}));
+
 // 2. Học phần
 export const hocPhan = pgTable("hoc_phan", {
   mahp: char("mahp", { length: 10 }).primaryKey(),

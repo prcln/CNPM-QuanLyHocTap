@@ -6,6 +6,6 @@ import dotenv from "dotenv";
 dotenv.config();
 
 const connectionString = process.env.DATABASE_URL!;
-// Cấu hình pooler connection cho Supabase
-const client = postgres(connectionString, { prepare: false });
+
+export const client = postgres(connectionString, { prepare: false });
 export const db = drizzle(client, { schema });
