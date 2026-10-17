@@ -72,6 +72,55 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Làm mới Access Token
+      description: Nhận Refresh Token từ HttpOnly Cookie hoặc request body để xoay vòng token mới.
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+                  description: Refresh token (tùy chọn nếu đã đính kèm qua Cookie)
+      responses:
+        '200':
+          description: Cấp token mới thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          description: Refresh Token bị thu hồi hoặc phát hiện tái sử dụng trái phép
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Lấy thông tin tài khoản hiện tại
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thông tin tài khoản
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   # ============================================================
   # ACCOUNTS
   # ============================================================

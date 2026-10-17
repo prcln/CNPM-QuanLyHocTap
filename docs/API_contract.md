@@ -40,16 +40,18 @@ Mỗi module tương ứng với từng Table trong [ERD](./ERD.png)
 
 ### 1. Module tài khoản
 
-| Method | Endpoint           | Role     | Description            |
-| ------ | ------------------ | -------- | ---------------------- |
-| POST   | `/auth/login`      | Public   | Đăng nhập              |
-| POST   | `/auth/logout`     | SV/GV/AD | Đăng xuất              |
-| GET    | `/accounts/me`     | SV/GV/AD | Lấy tài khoản hiện tại |
-| GET    | `/accounts`        | AD       | Danh sách tài khoản    |
-| GET    | `/accounts/{matk}` | AD       | Chi tiết tài khoản     |
-| POST   | `/accounts`        | AD       | Tạo tài khoản          |
-| PUT    | `/accounts/{matk}` | AD       | Cập nhật tài khoản     |
-| DELETE | `/accounts/{matk}` | AD       | Soft delete tài khoản  |
+| Method | Endpoint           | Role     | Description                                               |
+| ------ | ------------------ | -------- | --------------------------------------------------------- |
+| POST   | `/auth/login`      | Public   | Đăng nhập (nhận access token & refresh token cookie)      |
+| POST   | `/auth/refresh`    | Public   | Làm mới Access Token (xoay vòng Refresh Token qua Cookie) |
+| POST   | `/auth/logout`     | SV/GV/AD | Đăng xuất (thu hồi refresh token và xóa cookie)           |
+| GET    | `/auth/me`         | SV/GV/AD | Lấy tài khoản hiện tại                                    |
+| GET    | `/accounts/me`     | SV/GV/AD | Lấy tài khoản hiện tại                                    |
+| GET    | `/accounts`        | AD       | Danh sách tài khoản                                       |
+| GET    | `/accounts/{matk}` | AD       | Chi tiết tài khoản                                        |
+| POST   | `/accounts`        | AD       | Tạo tài khoản                                             |
+| PUT    | `/accounts/{matk}` | AD       | Cập nhật tài khoản                                        |
+| DELETE | `/accounts/{matk}` | AD       | Soft delete tài khoản                                     |
 
 
 ### 2. Module sinh viên

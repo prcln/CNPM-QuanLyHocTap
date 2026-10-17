@@ -11,6 +11,22 @@ Table tai_khoan {
   deleted_by integer
 }
 
+Table refresh_tokens {
+  id integer [pk, increment]
+  matk integer [not null]
+  token_hash varchar(255) [not null, unique]
+  expires_at timestamp [not null]
+  revoked_at timestamp
+  created_at timestamp [default: `now()`]
+  user_agent varchar(255)
+  ip_address varchar(45)
+
+  indexes {
+    matk
+    token_hash
+  }
+}
+
 Table sinh_vien {
   masv integer [pk, note: "MSSV"]
   matk integer [unique, not null]
@@ -150,6 +166,7 @@ Table nhom_sv {
 
 Ref: sinh_vien.matk - tai_khoan.matk
 Ref: giang_vien.matk - tai_khoan.matk
+Ref: refresh_tokens.matk > tai_khoan.matk
 Ref: tai_khoan.deleted_by >? tai_khoan.matk
 
 Ref: diem.masv > sinh_vien.masv 

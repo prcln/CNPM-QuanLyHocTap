@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { LandingPage } from '@/components/landing/LandingPage'
+import { LoginPage } from '@/components/auth/LoginPage'
+import RegisterPage from '@/pages/RegisterPage'
 import { Sidebar } from '@/components/portal/Sidebar'
 import type { PortalTab } from '@/components/portal/Sidebar'
 import { OverviewDashboard } from '@/components/portal/OverviewDashboard'
@@ -14,14 +16,11 @@ import { MockApiControlBar } from '@/components/shared/MockApiControlBar'
 import { useStudyStats } from '@/hooks/useStudyStats'
 import { Badge } from '@/components/ui/badge'
 import { BookOpen, CheckSquare, Award, Calendar, LayoutDashboard, Flame } from 'lucide-react'
-import LoginPage from '@/pages/LoginPage'
-import RegisterPage from '@/pages/RegisterPage'
-import { getAuthUser } from '@/services/auth'
-import type { AuthUser } from '@/types/auth'
 
+export type AppView = 'landing' | 'portal' | 'login' | 'register'
 
 export default function App() {
-  const [view, setView] = useState<'landing' | 'portal'>('portal')
+  const [view, setView] = useState<AppView>('portal')
   const [activeTab, setActiveTab] = useState<PortalTab>('overview')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isDark, setIsDark] = useState(() => {
@@ -31,24 +30,7 @@ export default function App() {
     return false
   })
 
-  const [authView, setAuthView] = useState<'login' | 'register'>('login')
-  const [authUser, setAuthUser] = useState<AuthUser | null>(() => getAuthUser())
-
   const { data: stats } = useStudyStats()
-
-  if (!authUser) {
-    return authView === 'login' ? (
-      <LoginPage
-        onLoginSuccess={setAuthUser}
-        onSwitchToRegister={() => setAuthView('register')}
-      />
-    ) : (
-      <RegisterPage
-        onRegisterSuccess={setAuthUser}
-        onSwitchToLogin={() => setAuthView('login')}
-      />
-    )
-  }
 
   const toggleDarkMode = () => {
     setIsDark((prev) => {
@@ -118,20 +100,53 @@ export default function App() {
         onEnterPortal={() => handleEnterPortal('overview')}
         isDark={isDark}
         toggleDarkMode={toggleDarkMode}
-        activeView={view}
+        activeView={view === 'register' ? 'login' : view}
         onNavigateHome={handleNavigateHome}
+        onNavigateLogin={() => setView('login')}
       />
 
       {/* View 1: Landing Page */}
-      {view === 'landing' ? (
+      {view === 'landing' && (
         <>
           <main className="flex-1">
-            <LandingPage onEnterPortal={handleEnterPortal} />
+            <LandingPage
+              onEnterPortal={handleEnterPortal}
+              onNavigateLogin={() => setView('login')}
+            />
           </main>
           <Footer />
         </>
-      ) : (
-        /* View 2: Student Portal with Sidebar Dashboard */
+      )}
+
+      {/* View 2: Login Page */}
+      {view === 'login' && (
+        <>
+          <main className="flex-1">
+            <LoginPage
+              onSuccess={() => handleEnterPortal('overview')}
+              onBackToLanding={handleNavigateHome}
+              onSwitchToRegister={() => setView('register')}
+            />
+          </main>
+          <Footer />
+        </>
+      )}
+
+      {/* View 3: Register Page */}
+      {view === 'register' && (
+        <>
+          <main className="flex-1">
+            <RegisterPage
+              onRegisterSuccess={() => handleEnterPortal('overview')}
+              onSwitchToLogin={() => setView('login')}
+            />
+          </main>
+          <Footer />
+        </>
+      )}
+
+      {/* View 4: Student Portal with Sidebar Dashboard */}
+      {view === 'portal' && (
         <div className="flex-1 flex overflow-hidden">
           {/* Left Sidebar */}
           <Sidebar
@@ -140,6 +155,7 @@ export default function App() {
             isCollapsed={isSidebarCollapsed}
             onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
             onNavigateLanding={handleNavigateHome}
+            onNavigateLogin={() => setView('login')}
             stats={{
               totalCourses: stats?.totalCourses || 0,
               pendingAssignments: stats?.pendingAssignments || 0,
@@ -189,7 +205,6 @@ export default function App() {
               {activeTab === 'activities' && <ExtracurricularView />}
             </div>
           </main>
-
         </div>
       )}
     </div>

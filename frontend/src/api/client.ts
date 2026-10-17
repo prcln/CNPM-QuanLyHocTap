@@ -17,12 +17,17 @@ class ApiClient {
   private mode: DataSourceMode = 'mock'
   private backendAvailable: boolean = false
   private baseUrl: string = API_BASE_URL
+  private token: string | null = null
 
   constructor() {
     // Check saved preference
     const savedMode = localStorage.getItem('cnpm_datasource_mode') as DataSourceMode
     if (savedMode === 'backend' || savedMode === 'mock') {
       this.mode = savedMode
+    }
+    const savedToken = localStorage.getItem('cnpm_access_token')
+    if (savedToken) {
+      this.token = savedToken
     }
   }
 
@@ -33,6 +38,19 @@ class ApiClient {
   setMode(mode: DataSourceMode): void {
     this.mode = mode
     localStorage.setItem('cnpm_datasource_mode', mode)
+  }
+
+  setToken(token: string | null): void {
+    this.token = token
+    if (token) {
+      localStorage.setItem('cnpm_access_token', token)
+    } else {
+      localStorage.removeItem('cnpm_access_token')
+    }
+  }
+
+  getToken(): string | null {
+    return this.token
   }
 
   isBackendAvailable(): boolean {
@@ -48,9 +66,14 @@ class ApiClient {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 2000)
       
-      const res = await fetch('http://localhost:3000/api/docs', {
+      const res = await fetch('http://localhost:3000/health', {
         method: 'GET',
         signal: controller.signal,
+      }).catch(async () => {
+        return fetch('http://localhost:3000/api/docs', {
+          method: 'GET',
+          signal: controller.signal,
+        })
       })
       clearTimeout(timeoutId)
       this.backendAvailable = res.ok || res.status === 404 || res.status === 200
@@ -63,12 +86,14 @@ class ApiClient {
 
   async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseUrl}${endpoint.startsWith('/') ? endpoint : `/${endpoint}`}`
-    const headers = {
+    const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
+      ...(options.headers as Record<string, string> || {}),
     }
 
     const response = await fetch(url, {
+      credentials: 'include',
       ...options,
       headers,
     })

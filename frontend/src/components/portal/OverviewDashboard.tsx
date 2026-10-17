@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { useStudyStats } from '@/hooks/useStudyStats'
 import { useCourses } from '@/hooks/useCourses'
 import { useAssignments, useToggleAssignmentStatus } from '@/hooks/useAssignments'
+import { useAuth } from '@/context/AuthContext'
 import type { PortalTab } from './Sidebar'
 
 interface OverviewDashboardProps {
@@ -28,6 +29,7 @@ interface OverviewDashboardProps {
 export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
   onNavigateTab,
 }) => {
+  const { user } = useAuth()
   const { data: stats } = useStudyStats()
   const { data: courses = [] } = useCourses()
   const { data: assignments = [] } = useAssignments()
@@ -87,7 +89,7 @@ export const OverviewDashboard: React.FC<OverviewDashboardProps> = ({
               <span className="text-xs text-muted-foreground">• Tuần học thứ 6</span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-              Xin chào, Nguyễn Văn An! 👋
+              Xin chào, {user?.fullName || 'Nguyễn Văn An'}! 👋
             </h2>
             <p className="text-sm text-muted-foreground max-w-xl">
               Bạn đang có <span className="font-bold text-foreground">{pendingAssignments.length} bài tập</span> cần hoàn thành và <span className="font-bold text-foreground">{activeCourses.length} môn học</span> trong học kỳ này.

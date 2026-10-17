@@ -1,20 +1,36 @@
 // src/types/auth.ts
-// Định nghĩa các kiểu dữ liệu dùng chung cho module Đăng nhập / Đăng ký
+
+export type UserRole = 'SV' | 'GV' | 'AD';
 
 export interface User {
   id: string;
   username: string;
   email: string;
-  password: string; // chỉ tồn tại trong mock, backend thật sẽ không bao giờ trả password về client
+  password?: string;
 }
 
-// Dữ liệu client gửi lên khi đăng nhập
-export interface LoginPayload {
+export interface AuthUser {
+  matk?: number;
+  id?: string;
+  username: string;
+  role?: UserRole;
+  fullName?: string;
+  studentId?: string; // MSSV (dành cho SV)
+  lecturerId?: string; // Mã GV (dành cho GV)
+  email?: string;
+  faculty?: string;
+  avatar?: string;
+  token?: string;
+  createdAt?: string;
+}
+
+export interface LoginCredentials {
   username: string;
   password: string;
 }
 
-// Dữ liệu client gửi lên khi đăng ký
+export type LoginPayload = LoginCredentials;
+
 export interface RegisterPayload {
   username: string;
   email: string;
@@ -22,24 +38,28 @@ export interface RegisterPayload {
   confirmPassword: string;
 }
 
-// Dữ liệu server trả về sau khi login/register thành công
-export interface AuthUser {
-  id: string;
-  username: string;
-  email: string;
-  token: string; // token giả lập, sẽ được thay bằng JWT thật khi có backend
+export interface AuthLoginResponse {
+  accessToken: string;
+  tokenType: string;
+  expiresIn: number;
+  account: {
+    matk: number;
+    username: string;
+    role: UserRole;
+    createdAt?: string;
+    updatedAt?: string;
+  };
 }
 
-// Kiểu lỗi thống nhất để hiển thị message trên form
 export class AuthError extends Error {
-  field?: "username" | "password" | "email" | "confirmPassword";
+  field?: 'username' | 'password' | 'email' | 'confirmPassword';
 
   constructor(
     message: string,
-    field?: "username" | "password" | "email" | "confirmPassword",
+    field?: 'username' | 'password' | 'email' | 'confirmPassword'
   ) {
     super(message);
-    this.name = "AuthError";
+    this.name = 'AuthError';
     this.field = field;
   }
 }
