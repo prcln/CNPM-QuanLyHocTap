@@ -4,6 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "concurrently -n \"BACKEND,FRONTEND\" -c \"blue,green\" \"pnpm run dev:backend\" \"pnpm run dev:frontend\"",
+    "dev:backend": "pnpm --prefix backend run dev",
+    "dev:frontend": "pnpm --prefix frontend dev",
+    "build": "pnpm --prefix frontend build && pnpm --prefix backend run build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -16,6 +20,7 @@
   },
   "devDependencies": {
     "@types/pg": "^8.23.1",
+    "concurrently": "^10.0.6",
     "drizzle-kit": "^0.31.11",
     "tsx": "^4.23.15"
   }
