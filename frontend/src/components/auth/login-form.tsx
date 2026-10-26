@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,15 +17,16 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { loginApi, saveAuthUser } from "@/services/auth";
-import type { AuthUser } from "@/types/auth";
-import { AuthError } from "@/types/auth";
+import {
+  AuthError,
+  LoginFormValuesSchema,
+} from "@/types/auth";
 
-const loginSchema = z.object({
-  username: z.string().min(1, "Vui lòng nhập tên đăng nhập"),
-  password: z.string().min(1, "Vui lòng nhập mật khẩu"),
-});
+import type {
+  AuthUser,
+  LoginFormValuesType,
+} from "@/types/auth";
 
-type LoginFormValues = z.infer<typeof loginSchema>;
 
 export function LoginForm({
   onLoginSuccess,
@@ -35,8 +35,8 @@ export function LoginForm({
 }) {
     const [formError, setFormError] = useState<string | null>(null);
 
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  const form = useForm<LoginFormValuesType>({
+  resolver: zodResolver(LoginFormValuesSchema),
     defaultValues: {
       username: "",
       password: "",
@@ -61,8 +61,8 @@ export function LoginForm({
   }
 },
   });
-  function onSubmit(values: LoginFormValues) {
-    setFormError(null);
+function onSubmit(values: LoginFormValuesType) {
+  setFormError(null);
     mutate(values);
   }
 

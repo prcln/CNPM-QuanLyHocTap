@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useNavigate, useRouterState } from '@tanstack/react-router'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { LandingPage } from '@/components/landing/LandingPage'
@@ -13,10 +14,10 @@ import { ExtracurricularView } from '@/components/activities/ExtracurricularView
 import { MockApiControlBar } from '@/components/shared/MockApiControlBar'
 import { useStudyStats } from '@/hooks/useStudyStats'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, CheckSquare, Award, Calendar, LayoutDashboard, Flame } from 'lucide-react'
+import { BookOpen, CheckSquare, Award, Calendar, LayoutDashboard, Flame, LogOut } from 'lucide-react'
 import LoginPage from '@/pages/LoginPage'
 import RegisterPage from '@/pages/RegisterPage'
-import { getAuthUser } from '@/services/auth'
+import { getAuthUser, clearAuthUser } from '@/services/auth'
 import type { AuthUser } from '@/types/auth'
 
 
@@ -31,21 +32,54 @@ export default function App() {
     return false
   })
 
-  const [authView, setAuthView] = useState<'login' | 'register'>('login')
-  const [authUser, setAuthUser] = useState<AuthUser | null>(() => getAuthUser())
+
+  const navigate = useNavigate()
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  })
+
+  const [authUser, setAuthUser] = useState<AuthUser | null>(
+    () => getAuthUser()
+  )
 
   const { data: stats } = useStudyStats()
 
+  useEffect(() => {
+    if (!authUser && pathname === '/') {
+      void navigate({ to: '/login', replace: true })
+    }
+
+    if (authUser && (pathname === '/login' || pathname === '/register')) {
+      void navigate({ to: '/', replace: true })
+    }
+  }, [authUser, pathname, navigate])
+
+  const handleLogout = () => {
+    clearAuthUser()
+    setAuthUser(null)
+    void navigate({ to: '/login' })
+  }
+
   if (!authUser) {
-    return authView === 'login' ? (
+    if (pathname === '/register') {
+      return (
+        <RegisterPage
+          onRegisterSuccess={(user) => {
+            setAuthUser(user)
+            void navigate({ to: '/' })
+          }}
+          onSwitchToLogin={() => void navigate({ to: '/login' })}
+        />
+      )
+    }
+
+    return (
       <LoginPage
-        onLoginSuccess={setAuthUser}
-        onSwitchToRegister={() => setAuthView('register')}
-      />
-    ) : (
-      <RegisterPage
-        onRegisterSuccess={setAuthUser}
-        onSwitchToLogin={() => setAuthView('login')}
+        onLoginSuccess={(user) => {
+          setAuthUser(user)
+          void navigate({ to: '/' })
+        }}
+        onSwitchToRegister={() => void navigate({ to: '/register' })}
       />
     )
   }
@@ -168,13 +202,27 @@ export default function App() {
                   </p>
                 </div>
 
-                {/* Breadcrumb pill */}
+
+                {/* Breadcrumb và nút đăng xuất */}
                 <div className="flex items-center gap-2 self-start sm:self-auto">
-                  <Badge variant="outline" className="text-xs px-2.5 py-1 font-medium bg-card/60">
+                  <Badge
+                    variant="outline"
+                    className="text-xs px-2.5 py-1 font-medium bg-card/60"
+                  >
                     Cổng Sinh Viên / {currentTabMeta.title}
                   </Badge>
+
+                  <button
+                    type="button"
+                    onClick={handleLogout}
+                    className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Đăng xuất
+                  </button>
                 </div>
               </div>
+
 
               {/* Dynamic Content Body based on tab */}
               {activeTab === 'overview' && (

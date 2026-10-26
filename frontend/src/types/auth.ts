@@ -1,5 +1,27 @@
 // src/types/auth.ts
 // Định nghĩa các kiểu dữ liệu dùng chung cho module Đăng nhập / Đăng ký
+import { z } from "zod";
+import type { ITaiKhoan } from "./dbSchema";
+export const LoginFormValuesSchema = z.object({
+  username: z.string().min(1, "Vui lòng nhập tên đăng nhập"),
+  password: z.string().min(1, "Vui lòng nhập mật khẩu"),
+});
+
+export type LoginFormValuesType = z.infer<typeof LoginFormValuesSchema>;
+
+export const RegisterFormValuesSchema = z
+  .object({
+    username: z.string().min(3, "Tên đăng nhập cần ít nhất 3 ký tự"),
+    email: z.email("Email không hợp lệ"),
+    password: z.string().min(6, "Mật khẩu cần ít nhất 6 ký tự"),
+    confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Mật khẩu xác nhận không khớp",
+    path: ["confirmPassword"],
+  });
+
+export type RegisterFormValuesType = z.infer<typeof RegisterFormValuesSchema>;
 
 export interface User {
   id: string;
@@ -9,9 +31,26 @@ export interface User {
 }
 
 // Dữ liệu client gửi lên khi đăng nhập
-export interface LoginPayload {
-  username: string;
-  password: string;
+export type LoginPayload = Pick<
+  ITaiKhoan,
+  "username" | "password"
+>;
+
+export type AccountResponse = Pick<
+  ITaiKhoan,
+  "matk" | "username" | "role"
+> & {
+  created_at?: string | null;
+  updated_at?: string | null;
+  deleted_at?: string | null;
+  deleted_by?: number | null;
+};
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  expires_in?: number;
+  account: AccountResponse;
 }
 
 // Dữ liệu client gửi lên khi đăng ký

@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -18,22 +17,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { registerApi, saveAuthUser } from "@/services/auth";
-import type { AuthUser } from "@/types/auth";
-import { AuthError } from "@/types/auth";
+import {
+  AuthError,
+  RegisterFormValuesSchema,
+} from "@/types/auth";
 
-const registerSchema = z
-  .object({
-    username: z.string().min(3, "Tên đăng nhập cần ít nhất 3 ký tự"),
-    email: z.string().email("Email không hợp lệ"),
-    password: z.string().min(6, "Mật khẩu cần ít nhất 6 ký tự"),
-    confirmPassword: z.string().min(1, "Vui lòng xác nhận mật khẩu"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Mật khẩu xác nhận không khớp",
-    path: ["confirmPassword"],
-  });
-
-type RegisterFormValues = z.infer<typeof registerSchema>;
+import type {
+  AuthUser,
+  RegisterFormValuesType,
+} from "@/types/auth";
 
 export function RegisterForm({
   onRegisterSuccess,
@@ -42,8 +34,8 @@ export function RegisterForm({
 }) {
   const [formError, setFormError] = useState<string | null>(null);
 
-  const form = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+  const form = useForm<RegisterFormValuesType>({
+    resolver: zodResolver(RegisterFormValuesSchema),
     defaultValues: { username: "", email: "", password: "", confirmPassword: "" },
   });
 
@@ -66,7 +58,7 @@ export function RegisterForm({
     },
   });
 
-  function onSubmit(values: RegisterFormValues) {
+  function onSubmit(values: RegisterFormValuesType) {
     setFormError(null);
     mutate(values);
   }

@@ -1,4 +1,5 @@
 import { RegisterForm } from "@/components/auth/register-form";
+import { AuthPageLayout } from "@/components/auth/AuthPageLayout";
 import type { AuthUser } from "@/types/auth";
 
 type RegisterPageProps = {
@@ -11,19 +12,12 @@ export default function RegisterPage({
   onSwitchToLogin,
 }: RegisterPageProps) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-4">
+    <AuthPageLayout
+      footerText="Đã có tài khoản?"
+      actionText="Đăng nhập"
+      onAction={onSwitchToLogin}
+    >
       <RegisterForm onRegisterSuccess={onRegisterSuccess} />
-
-      <p className="text-sm text-muted-foreground">
-        Đã có tài khoản?{" "}
-        <button
-          type="button"
-          onClick={onSwitchToLogin}
-          className="underline underline-offset-4"
-        >
-          Đăng nhập
-        </button>
-      </p>
-    </div>
+    </AuthPageLayout>
   );
 }
