@@ -12,7 +12,7 @@ interface CourseModalProps {
   isSubmitting?: boolean
 }
 
-const PRESET_COLORS = ['#3b82f6', '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#ec4899', '#64748b']
+const PRESET_COLORS = ['#0284c7', '#0ea5e9', '#06b6d4', '#0d9488', '#10b981', '#f59e0b', '#3b82f6']
 
 const DAYS: { label: string; value: DayOfWeek }[] = [
   { label: 'Thứ 2', value: 'Monday' },

@@ -1,34 +1,49 @@
-import type { Course, Assignment, GradeRecord, StudyStats, CourseFilters, AssignmentFilters } from '@/types/student'
-import { INITIAL_COURSES, INITIAL_ASSIGNMENTS, INITIAL_GRADES } from './mock/mockData'
+import type {
+  Course,
+  Assignment,
+  GradeRecord,
+  StudyStats,
+  CourseFilters,
+  AssignmentFilters,
+  ExtracurricularActivity,
+  DrlSummary,
+  ActivityCategory,
+} from '@/types/student'
+import {
+  INITIAL_COURSES,
+  INITIAL_ASSIGNMENTS,
+  INITIAL_GRADES,
+  INITIAL_ACTIVITIES,
+  INITIAL_DRL_SUMMARY,
+} from './mock/mockData'
 import { calculateGradeDetail } from '@/lib/score.utils'
-
-const STORAGE_KEY = 'cnpm_qlht_store_v1'
-const LATENCY_KEY = 'cnpm_qlht_latency_ms'
 
 interface DbSchema {
   courses: Course[]
   assignments: Assignment[]
   grades: GradeRecord[]
+  activities: ExtracurricularActivity[]
+  drlSummary: DrlSummary
 }
 
-// In-memory fallback
+// In-memory database store (pure RAM, no localStorage persistence)
 let inMemoryDb: DbSchema = {
   courses: [...INITIAL_COURSES],
   assignments: [...INITIAL_ASSIGNMENTS],
   grades: [...INITIAL_GRADES],
+  activities: [...INITIAL_ACTIVITIES],
+  drlSummary: { ...INITIAL_DRL_SUMMARY },
 }
 
-// Latency management
+let inMemoryLatency = 400
+
+// Latency management (in-memory)
 export const getSimulatedLatency = (): number => {
-  if (typeof window === 'undefined') return 300
-  const saved = localStorage.getItem(LATENCY_KEY)
-  return saved !== null ? parseInt(saved, 10) : 400
+  return inMemoryLatency
 }
 
 export const setSimulatedLatency = (ms: number): void => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(LATENCY_KEY, ms.toString())
-  }
+  inMemoryLatency = ms
 }
 
 export const sleep = (ms = getSimulatedLatency()): Promise<void> => {
@@ -37,29 +52,11 @@ export const sleep = (ms = getSimulatedLatency()): Promise<void> => {
 }
 
 const loadDb = (): DbSchema => {
-  if (typeof window === 'undefined') return inMemoryDb
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) {
-      saveDb(inMemoryDb)
-      return inMemoryDb
-    }
-    return JSON.parse(raw) as DbSchema
-  } catch (err) {
-    console.error('Failed to load database from localStorage, falling back to memory', err)
-    return inMemoryDb
-  }
+  return inMemoryDb
 }
 
 const saveDb = (db: DbSchema): void => {
   inMemoryDb = db
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(db))
-    } catch (err) {
-      console.error('Failed to persist database to localStorage', err)
-    }
-  }
 }
 
 export const mockDb = {
@@ -69,6 +66,8 @@ export const mockDb = {
       courses: JSON.parse(JSON.stringify(INITIAL_COURSES)),
       assignments: JSON.parse(JSON.stringify(INITIAL_ASSIGNMENTS)),
       grades: JSON.parse(JSON.stringify(INITIAL_GRADES)),
+      activities: JSON.parse(JSON.stringify(INITIAL_ACTIVITIES)),
+      drlSummary: JSON.parse(JSON.stringify(INITIAL_DRL_SUMMARY)),
     }
     saveDb(fresh)
   },
@@ -330,5 +329,62 @@ export const mockDb = {
       completedAssignments,
       urgentDeadlinesCount,
     }
+  },
+
+  // Extracurricular Activities CRUD & DRL
+  getActivities: (category?: ActivityCategory | 'all', registeredOnly?: boolean): ExtracurricularActivity[] => {
+    const db = loadDb()
+    let list = [...(db.activities || [])]
+    if (category && category !== 'all') {
+      list = list.filter((a) => a.category === category)
+    }
+    if (registeredOnly) {
+      list = list.filter((a) => a.registered)
+    }
+    return list.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
+  },
+
+  getActivityById: (id: string): ExtracurricularActivity | undefined => {
+    const db = loadDb()
+    return db.activities?.find((a) => a.id === id)
+  },
+
+  toggleActivityRegistration: (id: string): ExtracurricularActivity => {
+    const db = loadDb()
+    const index = db.activities.findIndex((a) => a.id === id)
+    if (index === -1) throw new Error('Không tìm thấy hoạt động ngoại khóa')
+
+    const item = db.activities[index]
+    const nextRegistered = !item.registered
+    const updated: ExtracurricularActivity = {
+      ...item,
+      registered: nextRegistered,
+      registeredCount: nextRegistered ? item.registeredCount + 1 : Math.max(0, item.registeredCount - 1),
+    }
+
+    db.activities[index] = updated
+
+    // Update DRL points dynamically based on registered and attended activities
+    const baseDrl = 58
+    let totalDrl = baseDrl
+    db.activities.forEach((a) => {
+      if (a.registered || a.attended) totalDrl += a.drlPoints
+    })
+    totalDrl = Math.min(100, Math.max(0, totalDrl))
+    const rank = totalDrl >= 90 ? 'Xuất sắc' : totalDrl >= 80 ? 'Tốt' : totalDrl >= 65 ? 'Khá' : 'Trung bình'
+    db.drlSummary = {
+      ...db.drlSummary,
+      totalDrl,
+      rank,
+      nextRankTarget: totalDrl >= 90 ? 100 : 90,
+    }
+
+    saveDb(db)
+    return updated
+  },
+
+  getDrlSummary: (): DrlSummary => {
+    const db = loadDb()
+    return db.drlSummary || INITIAL_DRL_SUMMARY
   },
 }

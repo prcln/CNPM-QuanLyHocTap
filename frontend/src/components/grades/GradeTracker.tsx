@@ -127,10 +127,10 @@ export function GradeTracker() {
           <p className="text-xs text-muted-foreground">Trọng số theo tín chỉ từng môn</p>
         </div>
 
-        <div className="rounded-2xl border bg-gradient-to-br from-purple-500/10 via-card to-card p-5 space-y-1 shadow-xs">
+        <div className="rounded-2xl border bg-gradient-to-br from-sky-500/10 via-card to-card p-5 space-y-1 shadow-xs">
           <div className="flex items-center justify-between text-muted-foreground">
             <span className="text-xs font-semibold uppercase tracking-wider">Tổng Tín Chỉ Đào Tạo</span>
-            <GraduationCap className="h-4 w-4 text-purple-500" />
+            <GraduationCap className="h-4 w-4 text-sky-600 dark:text-sky-400" />
           </div>
           <div className="text-3xl font-extrabold text-foreground">
             {stats?.totalCredits || 0}{' '}
