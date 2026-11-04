@@ -1,7 +1,7 @@
 import { eq, and, isNull } from "drizzle-orm";
 import { db } from "../db/index.js";
 import { taiKhoan, refreshTokens } from "../db/schema.js";
-import { comparePassword } from "../utils/password.utils.js";
+import { comparePassword, hashPassword } from "../utils/password.utils.js";
 import {
   generateAccessToken,
   generateRefreshToken,
@@ -16,6 +16,78 @@ import {
 } from "../types/auth.types.js";
 
 export class AuthService {
+  /**
+   * Đăng ký tài khoản mới (mặc định vai trò SV)
+   */
+  async register(
+    username: string,
+    pass: string,
+    clientMeta: AuthClientMeta
+  ): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    account: AccountDto;
+  }> {
+    // 1. Kiểm tra tài khoản đã tồn tại chưa
+    const [existing] = await db
+      .select()
+      .from(taiKhoan)
+      .where(eq(taiKhoan.username, username))
+      .limit(1);
+
+    if (existing) {
+      const error: any = new Error("Tên đăng nhập đã tồn tại trên hệ thống");
+      error.statusCode = 409;
+      throw error;
+    }
+
+    // 2. Băm mật khẩu bằng bcrypt
+    const hashedPassword = await hashPassword(pass);
+
+    // 3. Tạo tài khoản trong DB
+    const [newUser] = await db
+      .insert(taiKhoan)
+      .values({
+        username,
+        password: hashedPassword,
+        role: "SV",
+      })
+      .returning();
+
+    // 4. Tạo Payload JWT
+    const payload: JwtUserPayload = {
+      matk: newUser.matk,
+      username: newUser.username,
+      role: newUser.role,
+    };
+
+    // 5. Sinh cặp Token
+    const accessToken = generateAccessToken(payload);
+    const refreshToken = generateRefreshToken(payload);
+
+    // 6. Lưu Refresh Token băm vào DB
+    const tokenHash = hashToken(refreshToken);
+    const expiresAt = new Date(Date.now() + jwtConfig.refreshCookieMaxAge);
+
+    await db.insert(refreshTokens).values({
+      matk: newUser.matk,
+      tokenHash,
+      expiresAt,
+      userAgent: clientMeta.userAgent,
+      ipAddress: clientMeta.ipAddress,
+    });
+
+    const account: AccountDto = {
+      matk: newUser.matk,
+      username: newUser.username,
+      role: newUser.role,
+      createdAt: newUser.createdAt,
+      updatedAt: newUser.updatedAt,
+    };
+
+    return { accessToken, refreshToken, account };
+  }
+
   /**
    * Đăng nhập với username và password
    */

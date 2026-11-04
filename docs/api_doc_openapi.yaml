@@ -35,7 +35,29 @@ paths:
 
   # ============================================================
   # AUTH
-  # ============================================================
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Đăng ký tài khoản
+      description: Đăng ký tài khoản sinh viên mới bằng username và password.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '201':
+          description: Đăng ký thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
 
   /auth/login:
     post:

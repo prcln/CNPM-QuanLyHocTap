@@ -5,6 +5,68 @@ import { AuthenticatedRequest, AuthClientMeta } from "../types/auth.types.js";
 
 export class AuthController {
   /**
+   * Đăng ký: POST /api/v1/auth/register
+   */
+  async register(req: Request, res: Response): Promise<void> {
+    try {
+      const { username, password } = req.body;
+
+      if (!username || !password) {
+        res.status(400).json({
+          code: 400,
+          message: "Vui lòng nhập đầy đủ username và password",
+        });
+        return;
+      }
+
+      if (username.trim().length < 3) {
+        res.status(400).json({
+          code: 400,
+          message: "Tên đăng nhập phải có ít nhất 3 ký tự",
+        });
+        return;
+      }
+
+      if (password.length < 6) {
+        res.status(400).json({
+          code: 400,
+          message: "Mật khẩu phải có ít nhất 6 ký tự",
+        });
+        return;
+      }
+
+      const clientMeta: AuthClientMeta = {
+        userAgent: req.headers["user-agent"],
+        ipAddress: req.ip || req.socket.remoteAddress,
+      };
+
+      const result = await authService.register(username.trim(), password, clientMeta);
+
+      // Thiết lập HttpOnly Cookie cho Refresh Token
+      res.cookie(jwtConfig.refreshCookieName, result.refreshToken, {
+        httpOnly: true,
+        secure: jwtConfig.isProduction,
+        sameSite: jwtConfig.isProduction ? "strict" : "lax",
+        maxAge: jwtConfig.refreshCookieMaxAge,
+        path: "/",
+      });
+
+      res.status(201).json({
+        accessToken: result.accessToken,
+        tokenType: "Bearer",
+        expiresIn: 15 * 60,
+        account: result.account,
+      });
+    } catch (err: any) {
+      const statusCode = err.statusCode || 500;
+      res.status(statusCode).json({
+        code: statusCode,
+        message: err.message || "Lỗi máy chủ khi đăng ký tài khoản",
+      });
+    }
+  }
+
+  /**
    * Đăng nhập: POST /api/v1/auth/login
    */
   async login(req: Request, res: Response): Promise<void> {
