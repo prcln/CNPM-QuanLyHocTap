@@ -1,65 +1,53 @@
 // src/services/auth.ts
-// Mock API layer cho Đăng nhập / Đăng ký.
-// Khi backend thật (hoặc MSW từ issue #5) sẵn sàng, chỉ cần thay nội dung
-// bên trong 2 hàm loginApi() và registerApi() bằng fetch()/axios thật —
-// phần gọi hàm ở component (login-form.tsx, register-form.tsx) không cần đổi.
+// Real API layer cho Đăng nhập / Đăng ký kết nối Backend Express + Supabase
 
-import type { AuthUser, LoginPayload, RegisterPayload, User } from "@/types/auth";
+import type { AuthUser, LoginPayload, RegisterPayload, AuthLoginResponse } from "@/types/auth";
 import { AuthError } from "@/types/auth";
-
-// ----- "Database" giả lập trong bộ nhớ -----
-const mockUsers: User[] = [
-  {
-    id: "1",
-    username: "admin",
-    email: "admin@example.com",
-    password: "123456",
-  },
-];
-
-// Giả lập độ trễ mạng để giao diện loading trông giống thật
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// Sinh token giả lập — KHÔNG dùng cách này khi có backend thật
-function fakeToken(username: string) {
-  return btoa(`${username}:${Date.now()}`);
-}
+import { apiClient } from "@/api/client";
 
 export async function loginApi(payload: LoginPayload): Promise<AuthUser> {
-  await delay(600);
-
   const { username, password } = payload;
 
   if (!username.trim() || !password.trim()) {
     throw new AuthError("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu");
   }
 
-  const user = mockUsers.find((u) => u.username === username);
+  try {
+    const res = await apiClient.request<AuthLoginResponse>('/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: username.trim(),
+        password,
+      }),
+    });
 
-  if (!user) {
-    throw new AuthError("Tài khoản không tồn tại", "username");
+    apiClient.setToken(res.accessToken);
+
+    return {
+      matk: res.account.matk,
+      id: String(res.account.matk),
+      username: res.account.username,
+      role: res.account.role,
+      fullName: res.account.username,
+      token: res.accessToken,
+      createdAt: res.account.createdAt,
+    };
+  } catch (err: any) {
+    const msg = err.message || "Đăng nhập không thành công";
+    if (msg.includes("Tài khoản hoặc mật khẩu không chính xác") || msg.includes("không chính xác")) {
+      throw new AuthError(msg, "password");
+    }
+    if (msg.includes("tồn tại")) {
+      throw new AuthError(msg, "username");
+    }
+    throw new AuthError(msg);
   }
-
-  if (user.password !== password) {
-    throw new AuthError("Mật khẩu không đúng", "password");
-  }
-
-  return {
-    id: user.id,
-    username: user.username,
-    email: user.email,
-    token: fakeToken(user.username),
-  };
 }
 
 export async function registerApi(payload: RegisterPayload): Promise<AuthUser> {
-  await delay(600);
-
   const { username, email, password, confirmPassword } = payload;
 
-  if (!username.trim() || !email.trim() || !password.trim()) {
+  if (!username.trim() || !password.trim()) {
     throw new AuthError("Vui lòng nhập đầy đủ thông tin");
   }
 
@@ -71,39 +59,61 @@ export async function registerApi(payload: RegisterPayload): Promise<AuthUser> {
     throw new AuthError("Mật khẩu phải có ít nhất 6 ký tự", "password");
   }
 
-  const existed = mockUsers.some((u) => u.username === username);
-  if (existed) {
-    throw new AuthError("Tên đăng nhập đã tồn tại", "username");
+  try {
+    const res = await apiClient.request<AuthLoginResponse>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: username.trim(),
+        password,
+      }),
+    });
+
+    apiClient.setToken(res.accessToken);
+
+    return {
+      matk: res.account.matk,
+      id: String(res.account.matk),
+      username: res.account.username,
+      role: res.account.role,
+      fullName: res.account.username,
+      email: email?.trim(),
+      token: res.accessToken,
+      createdAt: res.account.createdAt,
+    };
+  } catch (err: any) {
+    const msg = err.message || "Đăng ký không thành công";
+    if (msg.includes("đã tồn tại")) {
+      throw new AuthError(msg, "username");
+    }
+    throw new AuthError(msg);
   }
-
-  const newUser: User = {
-    id: String(mockUsers.length + 1),
-    username,
-    email,
-    password,
-  };
-  mockUsers.push(newUser);
-
-  return {
-    id: newUser.id,
-    username: newUser.username,
-    email: newUser.email,
-    token: fakeToken(newUser.username),
-  };
 }
 
-// ----- Lưu / đọc phiên đăng nhập tạm thời -----
-const STORAGE_KEY = "auth_user";
+// ----- Đồng bộ phiên đăng nhập xác thực -----
+const USER_STORAGE_KEY = "cnpm_current_user";
 
 export function saveAuthUser(user: AuthUser) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(user));
+  if (user.token) {
+    apiClient.setToken(user.token);
+  }
+  if (typeof window !== "undefined") {
+    localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(user));
+  }
 }
 
 export function getAuthUser(): AuthUser | null {
-  const raw = localStorage.getItem(STORAGE_KEY);
-  return raw ? (JSON.parse(raw) as AuthUser) : null;
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(USER_STORAGE_KEY);
+    return raw ? (JSON.parse(raw) as AuthUser) : null;
+  } catch {
+    return null;
+  }
 }
 
 export function clearAuthUser() {
-  localStorage.removeItem(STORAGE_KEY);
+  apiClient.setToken(null);
+  if (typeof window !== "undefined") {
+    localStorage.removeItem(USER_STORAGE_KEY);
+  }
 }

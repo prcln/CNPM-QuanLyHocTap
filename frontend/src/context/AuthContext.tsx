@@ -9,6 +9,7 @@ export interface AuthContextType {
   isLoading: boolean
   error: string | null
   login: (credentials: LoginCredentials, rememberMe?: boolean) => Promise<void>
+  register: (credentials: LoginCredentials) => Promise<void>
   logout: () => Promise<void>
   switchDemoAccount: (demo: DemoAccount) => Promise<void>
   clearError: () => void
@@ -66,6 +67,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [])
 
+  const register = useCallback(async (credentials: LoginCredentials) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const result = await authApi.register(credentials)
+      setUser(result.user)
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(result.user))
+    } catch (err: any) {
+      const message = err.message || 'Đăng ký thất bại. Vui lòng kiểm tra lại thông tin.'
+      setError(message)
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
   const logout = useCallback(async () => {
     setIsLoading(true)
     try {
@@ -91,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     error,
     login,
+    register,
     logout,
     switchDemoAccount,
     clearError,

@@ -131,6 +131,28 @@ export const authApi = {
     return { user: mockUser, accessToken: mockToken }
   },
 
+  register: async (credentials: LoginCredentials): Promise<{ user: AuthUser; accessToken: string }> => {
+    const response = await apiClient.request<AuthLoginResponse>('/auth/register', {
+      method: 'POST',
+      body: JSON.stringify({
+        username: credentials.username.trim(),
+        password: credentials.password,
+      }),
+    })
+
+    const account = response.account
+    const user: AuthUser = {
+      matk: account.matk,
+      username: account.username,
+      role: account.role,
+      fullName: account.username,
+      createdAt: account.createdAt,
+    }
+
+    apiClient.setToken(response.accessToken)
+    return { user, accessToken: response.accessToken }
+  },
+
   logout: async (): Promise<void> => {
     if (apiClient.getMode() === 'backend') {
       try {
