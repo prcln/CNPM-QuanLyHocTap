@@ -42,6 +42,7 @@ Mỗi module tương ứng với từng Table trong [ERD](./ERD.png)
 
 | Method | Endpoint           | Role     | Description                                               |
 | ------ | ------------------ | -------- | --------------------------------------------------------- |
+| POST   | `/auth/register`   | Public   | Đăng ký tài khoản mới (SV)                                |
 | POST   | `/auth/login`      | Public   | Đăng nhập (nhận access token & refresh token cookie)      |
 | POST   | `/auth/refresh`    | Public   | Làm mới Access Token (xoay vòng Refresh Token qua Cookie) |
 | POST   | `/auth/logout`     | SV/GV/AD | Đăng xuất (thu hồi refresh token và xóa cookie)           |

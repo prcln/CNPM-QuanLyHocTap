@@ -12,7 +12,6 @@ import { AssignmentList } from '@/components/assignments/AssignmentList'
 import { GradeTracker } from '@/components/grades/GradeTracker'
 import { ScheduleView } from '@/components/schedule/ScheduleView'
 import { ExtracurricularView } from '@/components/activities/ExtracurricularView'
-import { MockApiControlBar } from '@/components/shared/MockApiControlBar'
 import { useStudyStats } from '@/hooks/useStudyStats'
 import { Badge } from '@/components/ui/badge'
 import { BookOpen, CheckSquare, Award, Calendar, LayoutDashboard, Flame } from 'lucide-react'
@@ -165,9 +164,6 @@ export default function App() {
           {/* Right Main Portal Content */}
           <main className="flex-1 overflow-y-auto subtle-mesh p-4 sm:p-6 lg:p-8 space-y-6">
             <div className="max-w-7xl mx-auto space-y-6">
-              {/* Data Source & Latency Control Bar */}
-              <MockApiControlBar />
-
               {/* Sub-header for active portal tab */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-border/60">
                 <div className="space-y-0.5">

@@ -18,9 +18,6 @@ import {
 } from './mock/mockData'
 import { calculateGradeDetail } from '@/lib/score.utils'
 
-const STORAGE_KEY = 'cnpm_qlht_store_v1'
-const LATENCY_KEY = 'cnpm_qlht_latency_ms'
-
 interface DbSchema {
   courses: Course[]
   assignments: Assignment[]
@@ -29,7 +26,7 @@ interface DbSchema {
   drlSummary: DrlSummary
 }
 
-// In-memory fallback
+// In-memory database store (pure RAM, no localStorage persistence)
 let inMemoryDb: DbSchema = {
   courses: [...INITIAL_COURSES],
   assignments: [...INITIAL_ASSIGNMENTS],
@@ -38,17 +35,15 @@ let inMemoryDb: DbSchema = {
   drlSummary: { ...INITIAL_DRL_SUMMARY },
 }
 
-// Latency management
+let inMemoryLatency = 400
+
+// Latency management (in-memory)
 export const getSimulatedLatency = (): number => {
-  if (typeof window === 'undefined') return 300
-  const saved = localStorage.getItem(LATENCY_KEY)
-  return saved !== null ? parseInt(saved, 10) : 400
+  return inMemoryLatency
 }
 
 export const setSimulatedLatency = (ms: number): void => {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(LATENCY_KEY, ms.toString())
-  }
+  inMemoryLatency = ms
 }
 
 export const sleep = (ms = getSimulatedLatency()): Promise<void> => {
@@ -57,29 +52,11 @@ export const sleep = (ms = getSimulatedLatency()): Promise<void> => {
 }
 
 const loadDb = (): DbSchema => {
-  if (typeof window === 'undefined') return inMemoryDb
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) {
-      saveDb(inMemoryDb)
-      return inMemoryDb
-    }
-    return JSON.parse(raw) as DbSchema
-  } catch (err) {
-    console.error('Failed to load database from localStorage, falling back to memory', err)
-    return inMemoryDb
-  }
+  return inMemoryDb
 }
 
 const saveDb = (db: DbSchema): void => {
   inMemoryDb = db
-  if (typeof window !== 'undefined') {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(db))
-    } catch (err) {
-      console.error('Failed to persist database to localStorage', err)
-    }
-  }
 }
 
 export const mockDb = {
