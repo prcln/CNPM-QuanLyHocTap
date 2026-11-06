@@ -1,4 +1,10 @@
-import { useState } from 'react'
+import { useState, useMemo, useCallback } from 'react'
+import {
+  useLegacyTable as useReactTable,
+  getCoreRowModel,
+  type LegacyColumnDef as ColumnDef,
+} from '@tanstack/react-table/legacy'
+import { flexRender } from '@tanstack/react-table'
 import {
   Award,
   Edit2,
@@ -12,13 +18,14 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { LoadingState, ErrorState, EmptyState } from '@/components/shared'
 import { useGrades, useUpdateGradeRecord } from '@/hooks/useGrades'
 import { useCourses } from '@/hooks/useCourses'
 import { useStudyStats } from '@/hooks/useStudyStats'
 import type { GradeRecord } from '@/types/student'
 
 export function GradeTracker() {
-  const { data: grades, isLoading, isFetching, refetch } = useGrades()
+  const { data: grades, isLoading, isFetching, error, refetch } = useGrades()
   const { data: courses } = useCourses()
   const { data: stats } = useStudyStats()
   const updateGradeMutation = useUpdateGradeRecord()
@@ -31,9 +38,9 @@ export function GradeTracker() {
     finalExamScore: 0,
   })
 
-  const courseMap = new Map(courses?.map((c) => [c.id, c]))
+  const courseMap = useMemo(() => new Map(courses?.map((c) => [c.id, c])), [courses])
 
-  const handleStartEdit = (grade: GradeRecord) => {
+  const handleStartEdit = useCallback((grade: GradeRecord) => {
     setEditingGradeId(grade.id)
     setEditScores({
       attendanceScore: grade.attendanceScore,
@@ -41,13 +48,13 @@ export function GradeTracker() {
       practicalScore: grade.practicalScore,
       finalExamScore: grade.finalExamScore,
     })
-  }
+  }, [])
 
-  const handleCancelEdit = () => {
+  const handleCancelEdit = useCallback(() => {
     setEditingGradeId(null)
-  }
+  }, [])
 
-  const handleSaveEdit = (gradeId: string) => {
+  const handleSaveEdit = useCallback((gradeId: string) => {
     updateGradeMutation.mutate(
       {
         id: gradeId,
@@ -62,7 +69,250 @@ export function GradeTracker() {
         onSuccess: () => setEditingGradeId(null),
       },
     )
-  }
+  }, [editScores, updateGradeMutation])
+
+  // TanStack Table columns definition
+  const columns = useMemo<ColumnDef<GradeRecord>[]>(
+    () => [
+      {
+        id: 'course',
+        header: 'Môn Học',
+        cell: ({ row }) => {
+          const grade = row.original
+          const course = courseMap.get(grade.courseId)
+          return (
+            <div>
+              <div className="font-semibold text-foreground">
+                {course?.name || grade.courseName || 'Môn học không xác định'}
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Badge variant="outline" className="font-mono text-[10px] py-0">
+                  {course?.code || grade.courseCode || 'HP'}
+                </Badge>
+                <span>{course?.instructor || 'Bộ môn'}</span>
+              </div>
+            </div>
+          )
+        },
+      },
+      {
+        id: 'credits',
+        header: () => <div className="text-center">Tín Chỉ</div>,
+        cell: ({ row }) => {
+          const course = courseMap.get(row.original.courseId)
+          return <div className="text-center font-medium">{course?.credits || row.original.credits || 0}</div>
+        },
+      },
+      {
+        id: 'attendance',
+        header: () => <div className="text-center">Chuyên Cần (10%)</div>,
+        cell: ({ row }) => {
+          const grade = row.original
+          const isEditing = editingGradeId === grade.id
+          if (isEditing) {
+            return (
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                max="10"
+                className="h-8 w-16 text-center mx-auto text-xs"
+                value={editScores.attendanceScore}
+                onChange={(e) =>
+                  setEditScores({
+                    ...editScores,
+                    attendanceScore: parseFloat(e.target.value) || 0,
+                  })
+                }
+              />
+            )
+          }
+          return <div className="text-center font-mono">{grade.attendanceScore.toFixed(1)}</div>
+        },
+      },
+      {
+        id: 'midterm',
+        header: () => <div className="text-center">Giữa Kỳ (20%)</div>,
+        cell: ({ row }) => {
+          const grade = row.original
+          const isEditing = editingGradeId === grade.id
+          if (isEditing) {
+            return (
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                max="10"
+                className="h-8 w-16 text-center mx-auto text-xs"
+                value={editScores.midtermScore}
+                onChange={(e) =>
+                  setEditScores({
+                    ...editScores,
+                    midtermScore: parseFloat(e.target.value) || 0,
+                  })
+                }
+              />
+            )
+          }
+          return <div className="text-center font-mono">{grade.midtermScore.toFixed(1)}</div>
+        },
+      },
+      {
+        id: 'practical',
+        header: () => <div className="text-center">Thực Hành (20%)</div>,
+        cell: ({ row }) => {
+          const grade = row.original
+          const isEditing = editingGradeId === grade.id
+          if (isEditing) {
+            return (
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                max="10"
+                className="h-8 w-16 text-center mx-auto text-xs"
+                value={editScores.practicalScore}
+                onChange={(e) =>
+                  setEditScores({
+                    ...editScores,
+                    practicalScore: parseFloat(e.target.value) || 0,
+                  })
+                }
+              />
+            )
+          }
+          return <div className="text-center font-mono">{grade.practicalScore.toFixed(1)}</div>
+        },
+      },
+      {
+        id: 'finalExam',
+        header: () => <div className="text-center">Cuối Kỳ (50%)</div>,
+        cell: ({ row }) => {
+          const grade = row.original
+          const isEditing = editingGradeId === grade.id
+          if (isEditing) {
+            return (
+              <Input
+                type="number"
+                step="0.1"
+                min="0"
+                max="10"
+                className="h-8 w-16 text-center mx-auto text-xs"
+                value={editScores.finalExamScore}
+                onChange={(e) =>
+                  setEditScores({
+                    ...editScores,
+                    finalExamScore: parseFloat(e.target.value) || 0,
+                  })
+                }
+              />
+            )
+          }
+          return <div className="text-center font-mono">{grade.finalExamScore.toFixed(1)}</div>
+        },
+      },
+      {
+        id: 'overall',
+        header: () => <div className="text-center">Điểm Hệ 10</div>,
+        cell: ({ row }) => (
+          <div className="text-center font-bold text-primary">
+            {row.original.overallScore.toFixed(1)}
+          </div>
+        ),
+      },
+      {
+        id: 'letterGrade',
+        header: () => <div className="text-center">Điểm Chữ</div>,
+        cell: ({ row }) => {
+          const letter = row.original.letterGrade
+          return (
+            <div className="text-center">
+              <Badge
+                variant={
+                  letter.startsWith('A')
+                    ? 'default'
+                    : letter.startsWith('B')
+                    ? 'secondary'
+                    : 'outline'
+                }
+                className="font-bold text-xs"
+              >
+                {letter}
+              </Badge>
+            </div>
+          )
+        },
+      },
+      {
+        id: 'gpa',
+        header: () => <div className="text-center">Điểm Hệ 4</div>,
+        cell: ({ row }) => (
+          <div className="text-center font-bold text-foreground">
+            {row.original.gpaScore.toFixed(1)}
+          </div>
+        ),
+      },
+      {
+        id: 'actions',
+        header: () => <div className="text-right">Thao Tác</div>,
+        cell: ({ row }) => {
+          const grade = row.original
+          const isEditing = editingGradeId === grade.id
+          const isSaving =
+            updateGradeMutation.isPending && updateGradeMutation.variables?.id === grade.id
+
+          if (isEditing) {
+            return (
+              <div className="flex items-center justify-end gap-1">
+                <Button
+                  size="icon"
+                  variant="default"
+                  className="h-7 w-7"
+                  disabled={isSaving}
+                  onClick={() => handleSaveEdit(grade.id)}
+                  title="Lưu điểm"
+                >
+                  <Check className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-7 w-7"
+                  onClick={handleCancelEdit}
+                  title="Hủy"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            )
+          }
+
+          return (
+            <div className="text-right">
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 gap-1 text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => handleStartEdit(grade)}
+              >
+                <Edit2 className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Nhập điểm</span>
+              </Button>
+            </div>
+          )
+        },
+      },
+    ],
+    [courseMap, editingGradeId, editScores, updateGradeMutation.isPending, updateGradeMutation.variables, handleSaveEdit, handleCancelEdit, handleStartEdit],
+  )
+
+  const tableData = useMemo(() => grades ?? [], [grades])
+
+  const table = useReactTable({
+    data: tableData,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  })
 
   // Academic standing label
   const getStandingLabel = (gpa4: number) => {
@@ -158,225 +408,70 @@ export function GradeTracker() {
         </div>
       </div>
 
-      {/* Grade Table */}
-      <div className="rounded-2xl border bg-card shadow-xs overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground border-b">
-              <tr>
-                <th className="p-4">Môn Học</th>
-                <th className="p-4 text-center">Tín Chỉ</th>
-                <th className="p-4 text-center">Chuyên Cần (10%)</th>
-                <th className="p-4 text-center">Giữa Kỳ (20%)</th>
-                <th className="p-4 text-center">Thực Hành (20%)</th>
-                <th className="p-4 text-center">Cuối Kỳ (50%)</th>
-                <th className="p-4 text-center">Điểm Hệ 10</th>
-                <th className="p-4 text-center">Điểm Chữ</th>
-                <th className="p-4 text-center">Điểm Hệ 4</th>
-                <th className="p-4 text-right">Thao Tác</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y text-xs sm:text-sm">
-              {isLoading ? (
-                <tr>
-                  <td colSpan={10} className="p-8 text-center text-muted-foreground">
-                    <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-primary" />
-                    Đang tải bảng điểm...
-                  </td>
-                </tr>
-              ) : grades?.map((grade) => {
-                const course = courseMap.get(grade.courseId)
-                const isEditing = editingGradeId === grade.id
-                const isSaving = updateGradeMutation.isPending && updateGradeMutation.variables?.id === grade.id
+      {/* Error state */}
+      {error && (
+        <ErrorState
+          title="Không thể tải bảng điểm"
+          message={error.message || 'Lỗi kết nối máy chủ khi lấy dữ liệu điểm số.'}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
+      )}
 
-                return (
+      {/* Loading state */}
+      {isLoading && (
+        <LoadingState type="table" message="Đang tải dữ liệu điểm học phần từ hệ thống..." />
+      )}
+
+      {/* TanStack Table View */}
+      {!isLoading && !error && (
+        <div className="rounded-2xl border bg-card shadow-xs overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground border-b">
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <tr key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => (
+                      <th key={header.id} className="p-4 font-semibold">
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(header.column.columnDef.header, header.getContext())}
+                      </th>
+                    ))}
+                  </tr>
+                ))}
+              </thead>
+              <tbody className="divide-y text-xs sm:text-sm">
+                {table.getRowModel().rows.map((row) => (
                   <tr
-                    key={grade.id}
+                    key={row.id}
                     className={`hover:bg-muted/30 transition-colors ${
-                      isEditing ? 'bg-primary/5' : ''
+                      editingGradeId === row.original.id ? 'bg-primary/5' : ''
                     }`}
                   >
-                    <td className="p-4">
-                      <div className="font-semibold text-foreground">
-                        {course?.name || 'Môn học không xác định'}
-                      </div>
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Badge variant="outline" className="font-mono text-[10px] py-0">
-                          {course?.code}
-                        </Badge>
-                        <span>{course?.instructor}</span>
-                      </div>
-                    </td>
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="p-4">
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
 
-                    <td className="p-4 text-center font-medium">
-                      {course?.credits || 0}
-                    </td>
-
-                    {/* Attendance */}
-                    <td className="p-4 text-center">
-                      {isEditing ? (
-                        <Input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="10"
-                          className="h-8 w-16 text-center mx-auto text-xs"
-                          value={editScores.attendanceScore}
-                          onChange={(e) =>
-                            setEditScores({
-                              ...editScores,
-                              attendanceScore: parseFloat(e.target.value) || 0,
-                            })
-                          }
-                        />
-                      ) : (
-                        <span className="font-mono">{grade.attendanceScore.toFixed(1)}</span>
-                      )}
-                    </td>
-
-                    {/* Midterm */}
-                    <td className="p-4 text-center">
-                      {isEditing ? (
-                        <Input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="10"
-                          className="h-8 w-16 text-center mx-auto text-xs"
-                          value={editScores.midtermScore}
-                          onChange={(e) =>
-                            setEditScores({
-                              ...editScores,
-                              midtermScore: parseFloat(e.target.value) || 0,
-                            })
-                          }
-                        />
-                      ) : (
-                        <span className="font-mono">{grade.midtermScore.toFixed(1)}</span>
-                      )}
-                    </td>
-
-                    {/* Practical */}
-                    <td className="p-4 text-center">
-                      {isEditing ? (
-                        <Input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="10"
-                          className="h-8 w-16 text-center mx-auto text-xs"
-                          value={editScores.practicalScore}
-                          onChange={(e) =>
-                            setEditScores({
-                              ...editScores,
-                              practicalScore: parseFloat(e.target.value) || 0,
-                            })
-                          }
-                        />
-                      ) : (
-                        <span className="font-mono">{grade.practicalScore.toFixed(1)}</span>
-                      )}
-                    </td>
-
-                    {/* Final */}
-                    <td className="p-4 text-center">
-                      {isEditing ? (
-                        <Input
-                          type="number"
-                          step="0.1"
-                          min="0"
-                          max="10"
-                          className="h-8 w-16 text-center mx-auto text-xs"
-                          value={editScores.finalExamScore}
-                          onChange={(e) =>
-                            setEditScores({
-                              ...editScores,
-                              finalExamScore: parseFloat(e.target.value) || 0,
-                            })
-                          }
-                        />
-                      ) : (
-                        <span className="font-mono">{grade.finalExamScore.toFixed(1)}</span>
-                      )}
-                    </td>
-
-                    {/* Overall 10 */}
-                    <td className="p-4 text-center font-bold text-primary">
-                      {grade.overallScore.toFixed(1)}
-                    </td>
-
-                    {/* Letter grade */}
-                    <td className="p-4 text-center">
-                      <Badge
-                        variant={
-                          grade.letterGrade.startsWith('A')
-                            ? 'default'
-                            : grade.letterGrade.startsWith('B')
-                            ? 'secondary'
-                            : 'outline'
-                        }
-                        className="font-bold text-xs"
-                      >
-                        {grade.letterGrade}
-                      </Badge>
-                    </td>
-
-                    {/* GPA 4 */}
-                    <td className="p-4 text-center font-bold text-foreground">
-                      {grade.gpaScore.toFixed(1)}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="p-4 text-right">
-                      {isEditing ? (
-                        <div className="flex items-center justify-end gap-1">
-                          <Button
-                            size="icon"
-                            variant="default"
-                            className="h-7 w-7"
-                            disabled={isSaving}
-                            onClick={() => handleSaveEdit(grade.id)}
-                            title="Lưu điểm"
-                          >
-                            <Check className="h-3.5 w-3.5" />
-                          </Button>
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="h-7 w-7"
-                            onClick={handleCancelEdit}
-                            title="Hủy"
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
-                      ) : (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="h-8 gap-1 text-xs text-muted-foreground hover:text-foreground"
-                          onClick={() => handleStartEdit(grade)}
-                        >
-                          <Edit2 className="h-3.5 w-3.5" />
-                          <span className="hidden sm:inline">Nhập điểm</span>
-                        </Button>
-                      )}
+                {table.getRowModel().rows.length === 0 && (
+                  <tr>
+                    <td colSpan={columns.length} className="p-0">
+                      <EmptyState
+                        title="Chưa có dữ liệu điểm học phần"
+                        description="Học kỳ này chưa có điểm số nào được ghi nhận. Vui lòng đăng ký học phần trước."
+                      />
                     </td>
                   </tr>
-                )
-              })}
-
-              {grades?.length === 0 && (
-                <tr>
-                  <td colSpan={10} className="p-10 text-center text-muted-foreground">
-                    Chưa có dữ liệu điểm học phần. Hãy thêm học phần trước.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

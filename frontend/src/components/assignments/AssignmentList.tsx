@@ -15,6 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { LoadingState, ErrorState, EmptyState } from '@/components/shared'
 import {
   useAssignments,
   useCreateAssignment,
@@ -34,7 +35,7 @@ export function AssignmentList() {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingAssignment, setEditingAssignment] = useState<Assignment | null>(null)
 
-  const { data: assignments, isLoading, isFetching, refetch } = useAssignments({
+  const { data: assignments, isLoading, isFetching, error, refetch } = useAssignments({
     courseId: selectedCourseId,
     status: statusFilter,
     priority: priorityFilter,
@@ -216,13 +217,19 @@ export function AssignmentList() {
         </div>
       </div>
 
+      {/* Error state */}
+      {error && (
+        <ErrorState
+          title="Không thể tải danh sách bài tập"
+          message={error.message || 'Lỗi kết nối khi lấy dữ liệu bài tập và nhiệm vụ.'}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
+      )}
+
       {/* Loading Skeleton */}
       {isLoading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4].map((n) => (
-            <div key={n} className="h-20 rounded-xl border bg-muted/40 animate-pulse" />
-          ))}
-        </div>
+        <LoadingState type="skeleton" count={4} />
       ) : (
         <div className="space-y-3">
           {assignments?.map((item) => {
@@ -351,18 +358,13 @@ export function AssignmentList() {
           })}
 
           {assignments?.length === 0 && (
-            <div className="py-16 text-center border rounded-2xl bg-card space-y-3">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                <Sparkles className="h-6 w-6 text-primary" />
-              </div>
-              <p className="font-semibold text-base">Không có bài tập nào cần làm</p>
-              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                Tuyệt vời! Bạn đã hoàn thành hết các nhiệm vụ hoặc chưa có bài tập nào theo bộ lọc này.
-              </p>
-              <Button size="sm" onClick={handleOpenAdd} className="gap-1.5 mt-2">
-                <Plus className="h-4 w-4" /> Thêm Bài Tập Mới
-              </Button>
-            </div>
+            <EmptyState
+              title="Không có bài tập nào cần làm"
+              description="Tuyệt vời! Bạn đã hoàn thành hết các nhiệm vụ hoặc chưa có bài tập nào theo bộ lọc này."
+              actionLabel="Thêm Bài Tập Mới"
+              onAction={handleOpenAdd}
+              icon={Sparkles}
+            />
           )}
         </div>
       )}
