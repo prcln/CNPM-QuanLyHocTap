@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { LandingPage } from '@/components/landing/LandingPage'
@@ -13,13 +13,21 @@ import { GradeTracker } from '@/components/grades/GradeTracker'
 import { ScheduleView } from '@/components/schedule/ScheduleView'
 import { ExtracurricularView } from '@/components/activities/ExtracurricularView'
 import { useStudyStats } from '@/hooks/useStudyStats'
+import { useAuth } from '@/context/AuthContext'
 import { Badge } from '@/components/ui/badge'
-import { BookOpen, CheckSquare, Award, Calendar, LayoutDashboard, Flame } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { BookOpen, CheckSquare, Award, Calendar, LayoutDashboard, Flame, ShieldAlert } from 'lucide-react'
 
 export type AppView = 'landing' | 'portal' | 'login' | 'register'
 
 export default function App() {
-  const [view, setView] = useState<AppView>('portal')
+  const { isAuthenticated } = useAuth()
+  const [view, setView] = useState<AppView>(() => {
+    if (typeof window !== 'undefined' && localStorage.getItem('cnpm_current_user')) {
+      return 'portal'
+    }
+    return 'landing'
+  })
   const [activeTab, setActiveTab] = useState<PortalTab>('overview')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isDark, setIsDark] = useState(() => {
@@ -28,6 +36,15 @@ export default function App() {
     }
     return false
   })
+
+  // Listen for 401 Unauthorized events from apiClient to redirect to login
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      setView('login')
+    }
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
+  }, [])
 
   const { data: stats } = useStudyStats()
 
@@ -44,6 +61,11 @@ export default function App() {
   }
 
   const handleEnterPortal = (targetTab?: PortalTab) => {
+    if (!isAuthenticated) {
+      setView('login')
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
     setView('portal')
     if (targetTab) {
       setActiveTab(targetTab)
@@ -144,8 +166,38 @@ export default function App() {
         </>
       )}
 
-      {/* View 4: Student Portal with Sidebar Dashboard */}
-      {view === 'portal' && (
+      {/* View 4: Protected Portal Route Guard */}
+      {view === 'portal' && !isAuthenticated && (
+        <main className="flex-1 flex items-center justify-center p-6 bg-background">
+          <div className="max-w-md w-full text-center space-y-4 p-8 border border-border/80 rounded-2xl bg-card shadow-xl">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Yêu Cầu Đăng Nhập</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Bạn cần đăng nhập để truy cập Cổng Học Tập và tra cứu thông tin học tập cá nhân theo quy định bảo mật hệ thống.
+            </p>
+            <div className="pt-2 flex flex-col gap-2.5">
+              <Button
+                onClick={() => setView('login')}
+                className="w-full bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-700 hover:from-sky-700 hover:to-blue-700 text-white font-semibold cursor-pointer"
+              >
+                Đăng Nhập Ngay
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleNavigateHome}
+                className="w-full cursor-pointer"
+              >
+                Quay Lại Trang Chủ
+              </Button>
+            </div>
+          </div>
+        </main>
+      )}
+
+      {/* View 4: Authenticated Student Portal with Sidebar Dashboard */}
+      {view === 'portal' && isAuthenticated && (
         <div className="flex-1 flex overflow-hidden">
           {/* Left Sidebar */}
           <Sidebar
