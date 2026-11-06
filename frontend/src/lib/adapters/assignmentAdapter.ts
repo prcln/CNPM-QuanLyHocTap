@@ -3,18 +3,26 @@ import type { Assignment, AssignmentPriority, AssignmentStatus } from '@/types/s
 export interface ApiAssignmentRaw {
   id?: number | string
   mabt?: number | string
+  ma_bt?: number | string
   course_id?: string
   courseId?: string
   malh?: number | string
+  ma_lh?: number | string
   class_code?: string
   classCode?: string
   title?: string
   tieu_de?: string
+  ten_bt?: string
+  tenBt?: string
   description?: string
   noi_dung?: string
+  mo_ta?: string
+  moTa?: string
   due_date?: string
   dueDate?: string
   deadline?: string | Date
+  han_nop?: string | Date
+  ngay_nop?: string | Date
   priority?: string
   muc_do_uu_tien?: string
   status?: string
@@ -57,13 +65,15 @@ export const normalizeAssignmentPriority = (raw: unknown): AssignmentPriority =>
  * Chuyển đổi một bản ghi bài tập thô sang Assignment ViewModel
  */
 export const adaptAssignmentRawToViewModel = (raw: ApiAssignmentRaw): Assignment => {
-  const id = String(raw.id || raw.mabt || `assign-${Math.random()}`)
-  const courseId = String(raw.courseId || raw.course_id || raw.malh || raw.classCode || raw.class_code || 'HP000')
-  const title = raw.title || raw.tieu_de || 'Bài tập không tên'
-  const description = raw.description || raw.noi_dung || ''
+  const id = String(raw.id ?? raw.mabt ?? raw.ma_bt ?? `assign-${Math.random()}`)
+  const courseId = String(
+    raw.courseId || raw.course_id || raw.malh || raw.ma_lh || raw.classCode || raw.class_code || 'HP000'
+  )
+  const title = raw.title || raw.tieu_de || raw.ten_bt || raw.tenBt || 'Bài tập không tên'
+  const description = raw.description || raw.noi_dung || raw.mo_ta || raw.moTa || ''
 
   let dueDate = ''
-  const rawDue = raw.dueDate || raw.due_date || raw.deadline
+  const rawDue = raw.dueDate || raw.due_date || raw.deadline || raw.han_nop || raw.ngay_nop
   if (rawDue) {
     if (rawDue instanceof Date) {
       dueDate = rawDue.toISOString()

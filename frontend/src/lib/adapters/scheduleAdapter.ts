@@ -51,6 +51,7 @@ export interface ApiScheduleRaw {
   malh?: number
   class_code?: string
   classCode?: string
+  thu?: number | string
   day_of_week?: number
   dayOfWeek?: number
   ngay_trong_tuan?: number
@@ -64,9 +65,11 @@ export interface ApiScheduleRaw {
   timeRange?: string
   start_period?: string | number
   startPeriod?: string | number
+  tiet_bd?: number | string
   tiet_bat_dau?: number
   end_period?: string | number
   endPeriod?: string | number
+  tiet_kt?: number | string
   tiet_ket_thuc?: number
   room?: string
   phong_hoc?: string
@@ -82,7 +85,13 @@ export interface ApiScheduleRaw {
  * Chuyển đổi một bản ghi lịch học từ API (snake_case hoặc CamelCase) sang CourseSchedule
  */
 export const adaptScheduleRawToViewModel = (raw: ApiScheduleRaw): CourseSchedule => {
-  const dayRaw = raw.dayOfWeek ?? raw.day_of_week ?? raw.ngay_trong_tuan ?? raw.dayNameVi ?? raw.day_name_vi
+  const dayRaw =
+    raw.thu ??
+    raw.dayOfWeek ??
+    raw.day_of_week ??
+    raw.ngay_trong_tuan ??
+    raw.dayNameVi ??
+    raw.day_name_vi
   const dayOfWeek = normalizeDayOfWeek(dayRaw)
 
   let timeSlot = raw.timeRange || raw.time_range || ''
@@ -92,8 +101,8 @@ export const adaptScheduleRawToViewModel = (raw: ApiScheduleRaw): CourseSchedule
     if (start && end) {
       timeSlot = `${start.slice(0, 5)} - ${end.slice(0, 5)}`
     } else {
-      const startP = raw.startPeriod ?? raw.start_period ?? raw.tiet_bat_dau
-      const endP = raw.endPeriod ?? raw.end_period ?? raw.tiet_ket_thuc
+      const startP = raw.startPeriod ?? raw.start_period ?? raw.tiet_bd ?? raw.tiet_bat_dau
+      const endP = raw.endPeriod ?? raw.end_period ?? raw.tiet_kt ?? raw.tiet_ket_thuc
       if (startP && endP) {
         timeSlot = `Tiết ${startP} - ${endP}`
       } else {

@@ -92,9 +92,21 @@ export const adaptGradeRawToViewModel = (
     diemCk = calc.diemCk
   }
 
-  const courseName = courseInfo?.name || raw.courseName || raw.course_name
-  const courseCode = courseInfo?.code || raw.mahp || raw.classCode || raw.class_code
-  const credits = courseInfo?.credits || Number(raw.credits ?? raw.tin_chi ?? 3)
+  const courseName =
+    courseInfo?.name ||
+    raw.courseName ||
+    raw.course_name ||
+    (raw as any).ten_hp ||
+    (raw as any).tenHp
+  const courseCode =
+    courseInfo?.code ||
+    raw.mahp ||
+    (raw as any).ma_hp ||
+    raw.classCode ||
+    raw.class_code
+  const credits =
+    courseInfo?.credits ||
+    Number(raw.credits ?? raw.tin_chi ?? (raw as any).so_tin_chi ?? (raw as any).soTinChi ?? 3)
 
   return {
     id,

@@ -25,20 +25,27 @@ export const getColorTagByCode = (code: string): string => {
 }
 
 export interface ApiCourseRaw {
-  id: string
+  id?: string | number
   code?: string
+  ma_hp?: string
+  maHp?: string
   name_vi?: string
   nameVi?: string
   name_en?: string | null
   nameEn?: string | null
   name?: string
+  ten_hp?: string
+  tenHp?: string
   instructor?: string
   ten_giang_vien?: string
+  giang_vien?: string
   credit_code?: string | null
   creditCode?: string | null
   course_units?: number | string | null
   courseUnits?: number | string | null
   credits?: number | string | null
+  so_tin_chi?: number | string | null
+  soTinChi?: number | string | null
   tin_chi_dao_tao?: number | string | null
   tuition_units?: number | string | null
   tuitionUnits?: number | string | null
@@ -73,11 +80,18 @@ export interface ApiCourseRaw {
  * Chuyển đổi một bản ghi môn học thô từ Supabase/Express sang ViewModel Course của giao diện
  */
 export const adaptCourseRawToViewModel = (raw: ApiCourseRaw): Course => {
-  const code = raw.code || raw.id || 'HP000'
-  const name = raw.name || raw.nameVi || raw.name_vi || 'Học phần không tên'
-  const instructor = raw.instructor || raw.ten_giang_vien || 'Bộ môn phân công'
+  const code = String(raw.code || raw.ma_hp || raw.maHp || raw.id || 'HP000')
+  const name = raw.name || raw.nameVi || raw.name_vi || raw.ten_hp || raw.tenHp || 'Học phần không tên'
+  const instructor = raw.instructor || raw.ten_giang_vien || raw.giang_vien || 'Bộ môn phân công'
 
-  const creditsRaw = raw.credits ?? raw.courseUnits ?? raw.course_units ?? raw.tin_chi_dao_tao ?? 3
+  const creditsRaw =
+    raw.credits ??
+    raw.so_tin_chi ??
+    raw.soTinChi ??
+    raw.courseUnits ??
+    raw.course_units ??
+    raw.tin_chi_dao_tao ??
+    3
   const credits = Math.round(Number(creditsRaw) || 3)
 
   const semester = raw.semester || raw.hoc_ky || 'HK2 2025-2026'
@@ -97,6 +111,8 @@ export const adaptCourseRawToViewModel = (raw: ApiCourseRaw): Course => {
     schedule = adaptScheduleRawToViewModel(raw.schedules[0])
   } else if (raw.schedule) {
     schedule = adaptScheduleRawToViewModel(raw.schedule as ApiScheduleRaw)
+  } else if ((raw as any).thu !== undefined || (raw as any).phong_hoc || (raw as any).phongHoc) {
+    schedule = adaptScheduleRawToViewModel(raw as any)
   } else {
     schedule = {
       dayOfWeek: 'Monday',
@@ -111,7 +127,7 @@ export const adaptCourseRawToViewModel = (raw: ApiCourseRaw): Course => {
   const updatedAt = raw.updatedAt || raw.updated_at || createdAt
 
   return {
-    id: raw.id || code,
+    id: String(raw.id || code),
     code,
     name,
     instructor,
