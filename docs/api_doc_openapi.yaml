@@ -30,8 +30,17 @@ tags:
     description: Quản lý bài tập
   - name: Groups
     description: Quản lý nhóm bài tập
+  - name: System
+    description: Kiểm tra trạng thái hệ thống
 
 paths:
+  /health:
+    get:
+      tags: [System]
+      summary: Kiểm tra trạng thái hệ thống
+      responses:
+        '200':
+          description: OK
 
   # ============================================================
   # AUTH
