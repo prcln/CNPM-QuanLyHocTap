@@ -1,5 +1,15 @@
 import { mockDb, sleep, getSimulatedLatency, setSimulatedLatency } from './mockDb'
 import { apiClient } from './client'
+import {
+  adaptCoursesListResponse,
+  adaptCourseRawToViewModel,
+  adaptGradesListResponse,
+  adaptGradeRawToViewModel,
+  adaptViewModelToGradePayload,
+  adaptAssignmentsListResponse,
+  adaptAssignmentRawToViewModel,
+  adaptViewModelToAssignmentPayload,
+} from '@/lib/adapters'
 import type {
   Course,
   Assignment,
@@ -26,8 +36,13 @@ export const studentApi = {
     getAll: async (filters?: CourseFilters): Promise<Course[]> => {
       if (apiClient.getMode() === 'backend') {
         try {
-          const res = await apiClient.request<{ data: Course[] } | Course[]>('/courses')
-          const list = Array.isArray(res) ? res : (res.data || [])
+          const queryParams = new URLSearchParams()
+          if (filters?.search) queryParams.set('search', filters.search)
+          if (filters?.semester) queryParams.set('semester', filters.semester)
+          const qs = queryParams.toString() ? `?${queryParams.toString()}` : ''
+
+          const res = await apiClient.request<unknown>(`/courses${qs}`)
+          const list = adaptCoursesListResponse(res)
           if (list.length > 0) return list
         } catch {
           // Fallback to mock on network or 404/500 error
@@ -40,8 +55,9 @@ export const studentApi = {
     getById: async (id: string): Promise<Course> => {
       if (apiClient.getMode() === 'backend') {
         try {
-          const res = await apiClient.request<{ data: Course } | Course>(`/courses/${id}`)
-          return ('data' in res && res.data) ? res.data : (res as Course)
+          const res = await apiClient.request<{ data: unknown } | unknown>(`/courses/${id}`)
+          const raw = res && typeof res === 'object' && 'data' in res ? (res as { data: unknown }).data : res
+          if (raw) return adaptCourseRawToViewModel(raw as any)
         } catch {
           // Fallback
         }
@@ -57,11 +73,12 @@ export const studentApi = {
     create: async (data: Omit<Course, 'id' | 'createdAt' | 'updatedAt'>): Promise<Course> => {
       if (apiClient.getMode() === 'backend') {
         try {
-          const res = await apiClient.request<{ data: Course } | Course>('/courses', {
+          const res = await apiClient.request<{ data: unknown } | unknown>('/courses', {
             method: 'POST',
             body: JSON.stringify(data),
           })
-          return ('data' in res && res.data) ? res.data : (res as Course)
+          const raw = res && typeof res === 'object' && 'data' in res ? (res as { data: unknown }).data : res
+          if (raw) return adaptCourseRawToViewModel(raw as any)
         } catch {
           // Fallback
         }
@@ -76,11 +93,12 @@ export const studentApi = {
     ): Promise<Course> => {
       if (apiClient.getMode() === 'backend') {
         try {
-          const res = await apiClient.request<{ data: Course } | Course>(`/courses/${id}`, {
+          const res = await apiClient.request<{ data: unknown } | unknown>(`/courses/${id}`, {
             method: 'PUT',
             body: JSON.stringify(updates),
           })
-          return ('data' in res && res.data) ? res.data : (res as Course)
+          const raw = res && typeof res === 'object' && 'data' in res ? (res as { data: unknown }).data : res
+          if (raw) return adaptCourseRawToViewModel(raw as any)
         } catch {
           // Fallback
         }
@@ -112,8 +130,8 @@ export const studentApi = {
     getAll: async (filters?: AssignmentFilters): Promise<Assignment[]> => {
       if (apiClient.getMode() === 'backend') {
         try {
-          const res = await apiClient.request<{ data: Assignment[] } | Assignment[]>('/assignments')
-          const list = Array.isArray(res) ? res : (res.data || [])
+          const res = await apiClient.request<unknown>('/assignments')
+          const list = adaptAssignmentsListResponse(res)
           if (list.length > 0) return list
         } catch {
           // Fallback
@@ -126,11 +144,13 @@ export const studentApi = {
     create: async (data: Omit<Assignment, 'id' | 'createdAt'>): Promise<Assignment> => {
       if (apiClient.getMode() === 'backend') {
         try {
-          const res = await apiClient.request<{ data: Assignment } | Assignment>('/assignments', {
+          const payload = adaptViewModelToAssignmentPayload(data)
+          const res = await apiClient.request<{ data: unknown } | unknown>('/assignments', {
             method: 'POST',
-            body: JSON.stringify(data),
+            body: JSON.stringify(payload),
           })
-          return ('data' in res && res.data) ? res.data : (res as Assignment)
+          const raw = res && typeof res === 'object' && 'data' in res ? (res as { data: unknown }).data : res
+          if (raw) return adaptAssignmentRawToViewModel(raw as any)
         } catch {
           // Fallback
         }
@@ -145,11 +165,13 @@ export const studentApi = {
     ): Promise<Assignment> => {
       if (apiClient.getMode() === 'backend') {
         try {
-          const res = await apiClient.request<{ data: Assignment } | Assignment>(`/assignments/${id}`, {
+          const payload = adaptViewModelToAssignmentPayload(updates)
+          const res = await apiClient.request<{ data: unknown } | unknown>(`/assignments/${id}`, {
             method: 'PUT',
-            body: JSON.stringify(updates),
+            body: JSON.stringify(payload),
           })
-          return ('data' in res && res.data) ? res.data : (res as Assignment)
+          const raw = res && typeof res === 'object' && 'data' in res ? (res as { data: unknown }).data : res
+          if (raw) return adaptAssignmentRawToViewModel(raw as any)
         } catch {
           // Fallback
         }
@@ -186,8 +208,8 @@ export const studentApi = {
     getAll: async (): Promise<GradeRecord[]> => {
       if (apiClient.getMode() === 'backend') {
         try {
-          const res = await apiClient.request<{ data: GradeRecord[] } | GradeRecord[]>('/students/me/grades')
-          const list = Array.isArray(res) ? res : (res.data || [])
+          const res = await apiClient.request<unknown>('/students/me/grades')
+          const list = adaptGradesListResponse(res)
           if (list.length > 0) return list
         } catch {
           // Fallback
@@ -200,6 +222,8 @@ export const studentApi = {
     update: async (
       id: string,
       scores: {
+        diemQt?: number
+        diemCk?: number
         attendanceScore: number
         midtermScore: number
         practicalScore: number
@@ -208,11 +232,13 @@ export const studentApi = {
     ): Promise<GradeRecord> => {
       if (apiClient.getMode() === 'backend') {
         try {
-          const res = await apiClient.request<{ data: GradeRecord } | GradeRecord>(`/classes/${id}/grades`, {
+          const payload = adaptViewModelToGradePayload(scores)
+          const res = await apiClient.request<{ data: unknown } | unknown>(`/classes/${id}/grades`, {
             method: 'PUT',
-            body: JSON.stringify(scores),
+            body: JSON.stringify(payload),
           })
-          return ('data' in res && res.data) ? res.data : (res as GradeRecord)
+          const raw = res && typeof res === 'object' && 'data' in res ? (res as { data: unknown }).data : res
+          if (raw) return adaptGradeRawToViewModel(raw as any)
         } catch {
           // Fallback
         }
@@ -228,7 +254,7 @@ export const studentApi = {
       if (apiClient.getMode() === 'backend') {
         try {
           const res = await apiClient.request<{ data: StudyStats } | StudyStats>('/reports/students/me')
-          if ('data' in res && res.data) return res.data
+          if (res && typeof res === 'object' && 'data' in res && res.data) return res.data
         } catch {
           // Fallback
         }
