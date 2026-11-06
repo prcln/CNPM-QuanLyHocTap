@@ -10,6 +10,7 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "db:seed": "tsx src/db/seed.ts",
     "test:integration": "tsx src/test-integration.ts",
+    "test:auth": "tsx src/test-auth-flow.ts",
     "test:nfr": "tsx src/benchmark-nfr.ts",
     "test": "tsx src/test-integration.ts && tsx src/benchmark-nfr.ts"
   },
