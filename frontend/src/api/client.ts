@@ -14,16 +14,18 @@ export interface ApiResponse<T> {
 export type DataSourceMode = 'mock' | 'backend'
 
 class ApiClient {
-  private mode: DataSourceMode = 'mock'
+  private mode: DataSourceMode = 'backend'
   private backendAvailable: boolean = false
   private baseUrl: string = API_BASE_URL
   private token: string | null = null
 
   constructor() {
-    // Check saved preference
+    // Check saved preference - default is 'backend'
     const savedMode = localStorage.getItem('cnpm_datasource_mode') as DataSourceMode
     if (savedMode === 'backend' || savedMode === 'mock') {
       this.mode = savedMode
+    } else {
+      this.mode = 'backend'
     }
     const savedToken = localStorage.getItem('cnpm_access_token')
     if (savedToken) {
@@ -64,19 +66,20 @@ class ApiClient {
   async checkBackendHealth(): Promise<boolean> {
     try {
       const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 2000)
+      const timeoutId = setTimeout(() => controller.abort(), 2500)
       
-      const res = await fetch('http://localhost:3000/health', {
+      const healthUrl = this.baseUrl.replace(/\/api\/v1\/?$/, '/health')
+      const res = await fetch(healthUrl, {
         method: 'GET',
         signal: controller.signal,
       }).catch(async () => {
-        return fetch('http://localhost:3000/api/docs', {
+        return fetch(`${this.baseUrl}/health`, {
           method: 'GET',
           signal: controller.signal,
         })
       })
       clearTimeout(timeoutId)
-      this.backendAvailable = res.ok || res.status === 404 || res.status === 200
+      this.backendAvailable = res.ok || res.status === 200
       return this.backendAvailable
     } catch {
       this.backendAvailable = false
@@ -100,7 +103,11 @@ class ApiClient {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ message: response.statusText }))
-      throw new Error(errorData.message || `API Error: ${response.status}`)
+      const message = errorData.message || (errorData.details ? JSON.stringify(errorData.details) : `API Error: ${response.status}`)
+      const error = new Error(message)
+      ;(error as any).status = response.status
+      ;(error as any).details = errorData.details
+      throw error
     }
 
     return response.json()
