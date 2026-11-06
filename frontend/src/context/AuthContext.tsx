@@ -32,6 +32,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [error, setError] = useState<string | null>(null)
 
+  // Listen to 401 Unauthorized events from apiClient
+  useEffect(() => {
+    const unsubscribe = apiClient.onUnauthorized(() => {
+      setUser(null)
+      localStorage.removeItem(USER_STORAGE_KEY)
+      sessionStorage.removeItem(USER_STORAGE_KEY)
+      setError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.')
+    })
+    return () => unsubscribe()
+  }, [])
+
   // Verify token or active session on startup
   useEffect(() => {
     const token = apiClient.getToken()
@@ -40,9 +51,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (fetched) {
           setUser(fetched)
           localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(fetched))
+        } else {
+          apiClient.setToken(null)
+          localStorage.removeItem(USER_STORAGE_KEY)
         }
       }).catch(() => {
-        // silently ignore
+        apiClient.setToken(null)
+        localStorage.removeItem(USER_STORAGE_KEY)
       })
     }
   }, [user])

@@ -13,11 +13,14 @@ export interface ApiResponse<T> {
 
 export type DataSourceMode = 'mock' | 'backend'
 
+export type UnauthorizedHandler = () => void
+
 class ApiClient {
   private mode: DataSourceMode = 'backend'
   private backendAvailable: boolean = false
   private baseUrl: string = API_BASE_URL
   private token: string | null = null
+  private unauthorizedHandlers: Set<UnauthorizedHandler> = new Set()
 
   constructor() {
     // Check saved preference - default is 'backend'
@@ -30,6 +33,26 @@ class ApiClient {
     const savedToken = localStorage.getItem('cnpm_access_token')
     if (savedToken) {
       this.token = savedToken
+    }
+  }
+
+  onUnauthorized(handler: UnauthorizedHandler): () => void {
+    this.unauthorizedHandlers.add(handler)
+    return () => {
+      this.unauthorizedHandlers.delete(handler)
+    }
+  }
+
+  notifyUnauthorized(): void {
+    this.unauthorizedHandlers.forEach((handler) => {
+      try {
+        handler()
+      } catch (err) {
+        console.error('Error executing unauthorized handler:', err)
+      }
+    })
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('auth:unauthorized'))
     }
   }
 
@@ -102,6 +125,10 @@ class ApiClient {
     })
 
     if (!response.ok) {
+      if (response.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
+        this.setToken(null)
+        this.notifyUnauthorized()
+      }
       const errorData = await response.json().catch(() => ({ message: response.statusText }))
       const message = errorData.message || (errorData.details ? JSON.stringify(errorData.details) : `API Error: ${response.status}`)
       const error = new Error(message)

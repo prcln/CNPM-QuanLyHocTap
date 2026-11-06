@@ -13,6 +13,20 @@ export interface AccountData {
   deletedBy?: number | null;
 }
 
+export interface SafeAccount {
+  matk: number;
+  username: string;
+  role: string;
+  createdAt?: Date | null;
+  updatedAt?: Date | null;
+}
+
+export function stripPassword(account: AccountData | null): SafeAccount | null {
+  if (!account) return null;
+  const { password, deletedAt, deletedBy, ...safe } = account;
+  return safe;
+}
+
 // In-memory fallback cache
 let memoryAccounts: AccountData[] = [
   { matk: 1, username: "admin", password: "$2b$10$f.w27K8JqC4jB3b6V7kIuu10Uo4K4Jg3zU1rYq6v0eH3C0yE5cEWy", role: "AD", createdAt: new Date() },
@@ -76,7 +90,7 @@ export class AccountRepository {
     }
     const active = memoryAccounts.filter((a) => !a.deletedAt);
     return {
-      items: active.slice(offset, offset + limit),
+      items: active.slice(offset, offset + limit).map((a) => stripPassword(a) as SafeAccount),
       total: active.length,
     };
   }

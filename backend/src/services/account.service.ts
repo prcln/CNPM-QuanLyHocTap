@@ -1,4 +1,4 @@
-import { accountRepository } from "../repositories/account.repository.js";
+import { accountRepository, stripPassword, SafeAccount } from "../repositories/account.repository.js";
 import { studentRepository } from "../repositories/student.repository.js";
 import { lecturerRepository } from "../repositories/lecturer.repository.js";
 import { hashPassword } from "../utils/password.utils.js";
@@ -28,11 +28,12 @@ export class AccountService {
     return accountRepository.findAll(limit, offset);
   }
 
-  async getAccountById(matk: number) {
-    return accountRepository.findById(matk);
+  async getAccountById(matk: number): Promise<SafeAccount | null> {
+    const account = await accountRepository.findById(matk);
+    return stripPassword(account);
   }
 
-  async createAccount(data: { username: string; password: string; role?: string }) {
+  async createAccount(data: { username: string; password: string; role?: string }): Promise<SafeAccount> {
     const existing = await accountRepository.findByUsername(data.username);
     if (existing) {
       const err: any = new Error("Tên đăng nhập đã tồn tại");
@@ -40,19 +41,23 @@ export class AccountService {
       throw err;
     }
     const hashed = await hashPassword(data.password);
-    return accountRepository.create({
+    const created = await accountRepository.create({
       username: data.username,
       password: hashed,
       role: data.role || "SV",
     });
+    return stripPassword(created)!;
   }
 
-  async updateAccount(matk: number, data: { username?: string; password?: string; role?: string }) {
-    const updates: any = { ...data };
+  async updateAccount(matk: number, data: { username?: string; password?: string; role?: string }): Promise<SafeAccount | null> {
+    const updates: any = {};
+    if (data.username !== undefined) updates.username = data.username;
+    if (data.role !== undefined) updates.role = data.role;
     if (data.password) {
       updates.password = await hashPassword(data.password);
     }
-    return accountRepository.update(matk, updates);
+    const updated = await accountRepository.update(matk, updates);
+    return stripPassword(updated);
   }
 
   async deleteAccount(matk: number, deletedBy?: number) {

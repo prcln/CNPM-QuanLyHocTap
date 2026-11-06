@@ -13,7 +13,11 @@ export class StudentService {
       err.statusCode = 404;
       throw err;
     }
-    return studentRepository.update(student.masv, data);
+    const safeData: Partial<StudentData> = {};
+    if (data.email !== undefined) safeData.email = data.email;
+    if (data.chuong_trinh !== undefined) safeData.chuong_trinh = data.chuong_trinh;
+    if (data.lop !== undefined) safeData.lop = data.lop;
+    return studentRepository.update(student.masv, safeData);
   }
 
   async getStudents(filters: { search?: string; khoa?: number; lop?: string; page?: number; limit?: number } = {}) {

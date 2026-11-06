@@ -12,13 +12,37 @@
 | Error          | HTTP status + `{code, message, details}`          |
 
 
-Note 1: MVP trước mắt chưa thực hiện Authentication vội, nhưng trong Swagger tôi vẫn để tạm là dùng JWT
-```yaml
-bearerAuth:
-    type: http
-    scheme: bearer
-    bearerFormat: JWT
-```
+### Kiến trúc Xác thực & Phân quyền (Authentication & Authorization)
+
+Hệ thống đã triển khai đầy đủ cơ chế **JWT Dual-Token** (Access Token + Refresh Token Cookie) kết hợp RBAC và Scoping:
+
+1. **Cơ chế xác thực (JWT vs Session):**
+   - Lựa chọn **JWT** dạng kép để duy trì trạng thái phi tập trung (stateless API), tối ưu cho Single Page Application (React) và REST backend.
+   - **Access Token:** Vòng đời ngắn (**15 phút**), truyền qua Header `Authorization: Bearer <access_token>`. Chứa payload tối thiểu `{ matk, username, role }`.
+   - **Refresh Token:** Vòng đời dài (**7 ngày**), được băm SHA-256 lưu trong bảng `refresh_tokens`, gửi qua cookie bảo mật `refreshToken` (`httpOnly: true`, `sameSite: "lax"`, `secure: isProduction`).
+
+2. **Vòng đời Token, Xoay vòng (Rotation) & Thu hồi (Revocation):**
+   - **Đăng nhập (`/auth/login`):** Băm kiểm tra mật khẩu qua bcrypt (10 rounds), sinh cặp token mới và thiết lập HttpOnly cookie.
+   - **Xoay vòng Token (`/auth/refresh` - Refresh Token Rotation):** Mỗi lần làm mới token, refresh token cũ bị đánh dấu đã dùng/thu hồi và một cặp token mới được cấp phát. Nếu phát hiện token cũ được gửi lại, hệ thống cảnh báo đánh cắp token và trả về `403 Forbidden`.
+   - **Đăng xuất (`/auth/logout`):** Đánh dấu thu hồi token trong DB (`revoked_at = NOW()`) và hủy cookie trên trình duyệt (`res.clearCookie`).
+
+3. **Bảo mật Mật khẩu (Password Security):**
+   - Mật khẩu lưu trữ luôn được băm bằng `bcrypt` (10 salt rounds).
+   - Tuyệt đối **không trả password** (kể cả dạng hash) trong bất kỳ phản hồi API nào (`/auth/*`, `/accounts/*`, `/students/*`).
+   - Logger hệ thống không log mật khẩu thô hoặc thông tin nhạy cảm.
+
+4. **Biến môi trường (Environment Configuration):**
+   - `JWT_ACCESS_SECRET`: Secret key ký và giải mã Access Token.
+   - `JWT_REFRESH_SECRET`: Secret key ký và giải mã Refresh Token.
+   - `JWT_ACCESS_EXPIRES_IN`: Thời hạn sống của Access Token (mặc định `15m`).
+   - `JWT_REFRESH_EXPIRES_IN`: Thời hạn sống của Refresh Token (mặc định `7d`).
+   - `JWT_REFRESH_COOKIE_NAME`: Tên cookie lưu refresh token (mặc định `refreshToken`).
+
+5. **Role Guard & Giới hạn dữ liệu theo người dùng (Data Scoping):**
+   - Role Guard: `SV`, `GV`, `AD`.
+   - Middleware `authenticateToken` kiểm tra tính hợp lệ và hạn dùng của JWT (thiếu/hết hạn trả `401`).
+   - Middleware `requireRole(...)` chặn các role không hợp lệ (trả `403`).
+   - Tất cả các endpoint cá nhân (`/students/me/*`, `/lecturers/me/*`, `/accounts/me`) bắt buộc định danh dựa trên `req.user.matk` lấy từ token đã xác thực; **không tin tưởng** và không cho phép can thiệp `masv`/`matk` gửi từ client.
 
 Note 2: Có thể xem format request / response trong Swagger rồi định nghĩa type tương ứng cho request / response trong frontend
 
