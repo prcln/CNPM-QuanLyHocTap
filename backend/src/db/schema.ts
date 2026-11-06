@@ -12,10 +12,15 @@ import {
   char,
   boolean,
   pgView,
+  primaryKey,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
-// 1. Tài khoản
+// =========================================================================
+// 1. Module Tài Khoản & Auth
+// =========================================================================
+
 export const taiKhoan = pgTable("tai_khoan", {
   matk: serial("matk").primaryKey(),
   username: varchar("username", { length: 255 }).notNull().unique(),
@@ -27,7 +32,6 @@ export const taiKhoan = pgTable("tai_khoan", {
   deletedBy: integer("deleted_by"),
 });
 
-// 1.1 Refresh Tokens (Quản lý phiên đăng nhập và xoay vòng Refresh Token)
 export const refreshTokens = pgTable("refresh_tokens", {
   id: serial("id").primaryKey(),
   matk: integer("matk").notNull().references(() => taiKhoan.matk, { onDelete: "cascade" }),
@@ -39,8 +43,16 @@ export const refreshTokens = pgTable("refresh_tokens", {
   ipAddress: varchar("ip_address", { length: 45 }),
 });
 
-export const taiKhoanRelations = relations(taiKhoan, ({ many }) => ({
+export const taiKhoanRelations = relations(taiKhoan, ({ one, many }) => ({
   refreshTokens: many(refreshTokens),
+  sinhVien: one(sinhVien, {
+    fields: [taiKhoan.matk],
+    references: [sinhVien.matk],
+  }),
+  giangVien: one(giangVien, {
+    fields: [taiKhoan.matk],
+    references: [giangVien.matk],
+  }),
 }));
 
 export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
@@ -50,48 +62,180 @@ export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
   }),
 }));
 
-// 2. Học phần
+// =========================================================================
+// 2. Module Sinh Viên & Giảng Viên
+// =========================================================================
+
+export const sinhVien = pgTable("sinh_vien", {
+  masv: integer("masv").primaryKey(), // MSSV (ví dụ: 20210001)
+  matk: integer("matk").notNull().unique().references(() => taiKhoan.matk, { onDelete: "cascade" }),
+  hoten: varchar("hoten", { length: 255 }).notNull(),
+  gioiTinh: varchar("gioi_tinh", { length: 15 }).default("Nam"), // Đồng bộ varchar(15) theo Phase 1.1
+  email: varchar("email", { length: 255 }),
+  chuong_trinh: varchar("chuong_trinh", { length: 255 }).default("Chuẩn"),
+  truong: varchar("truong", { length: 255 }).default("Trường CNTT & TT"),
+  lop: varchar("lop", { length: 255 }).default("Việt Nhật 01"),
+  khoa: integer("khoa").default(66), // K66
+  trangThai: varchar("trang_thai", { length: 255 }).default("Học"),
+  cpa: decimal("cpa", { precision: 4, scale: 2 }).default("0.00"), // decimal(4,2) chống tràn số
+  deletedAt: timestamp("deleted_at"),
+});
+
+export const giangVien = pgTable("giang_vien", {
+  magv: integer("magv").primaryKey(), // Mã GV (ví dụ: 82)
+  matk: integer("matk").notNull().unique().references(() => taiKhoan.matk, { onDelete: "cascade" }),
+  hoten: varchar("hoten", { length: 255 }).notNull(),
+  gioiTinh: varchar("gioi_tinh", { length: 15 }).default("Nữ"),
+  email: varchar("email", { length: 255 }),
+  truong: varchar("truong", { length: 255 }).default("Bộ môn Công nghệ Phần mềm"),
+  deletedAt: timestamp("deleted_at"),
+});
+
+// =========================================================================
+// 3. Module Học Phần & Lớp Học
+// =========================================================================
+
 export const hocPhan = pgTable("hoc_phan", {
-  mahp: char("mahp", { length: 10 }).primaryKey(),
+  mahp: char("mahp", { length: 10 }).primaryKey(), // ví dụ: IT3040
   ten: varchar("ten", { length: 255 }).notNull(),
   truong: varchar("truong", { length: 255 }),
   batBuoc: boolean("bat_buoc").default(false),
-  tinChiDaoTao: integer("tin_chi_dao_tao").default(0),
-  tinChiHocPhi: integer("tin_chi_hoc_phi").default(0),
-  phanBo: char("phan_bo", { length: 7 }),
+  tinChiDaoTao: integer("tin_chi_dao_tao").default(3),
+  tinChiHocPhi: integer("tin_chi_hoc_phi").default(3),
+  phanBo: char("phan_bo", { length: 15 }), // ví dụ: "3(2-1-0-6)"
   noiDung: text("noidung"),
   deletedAt: timestamp("deleted_at"),
 });
 
-// 3. Lớp học (Đảm bảo Guardrail 3: trongso_qt & malh_lt nullable)
 export const lopHoc = pgTable("lop_hoc", {
   malh: serial("malh").primaryKey(),
   mahp: char("mahp", { length: 10 }).notNull().references(() => hocPhan.mahp),
-  malop: char("malop", { length: 6 }).notNull(),
-  hocKy: char("hoc_ky", { length: 5 }).notNull(),
+  malop: char("malop", { length: 6 }).notNull(), // mã lớp mở trên TKB: ví dụ "145678"
+  hocKy: char("hoc_ky", { length: 5 }).notNull().default("20261"),
   hocKyPhu: char("hoc_ky_phu", { length: 2 }).default("AB"),
-  malhLt: integer("malh_lt"), // Nullable cho lớp LT độc lập
-  loai: char("loai", { length: 5 }), // LT, BT, LT+BT, TN, DA
-  trongsoQt: decimal("trongso_qt", { precision: 3, scale: 2 }).notNull().default("0.40"),
-  hinhthucGiangday: char("hinhthuc_giangday", { length: 10 }).default("Offline"),
+  malhLt: integer("malh_lt"), // Nullable theo Guardrail 3 / Phase 1.1 cho lớp lý thuyết độc lập
+  loai: char("loai", { length: 10 }).default("LT+BT"), // LT, BT, LT+BT, TN, DA
+  trongsoQt: decimal("trongso_qt", { precision: 3, scale: 2 }).notNull().default("0.40"), // Guardrail 3
+  hinhthucGiangday: char("hinhthuc_giangday", { length: 15 }).default("Offline"),
   deletedAt: timestamp("deleted_at"),
 });
 
-// 4. Điểm sinh viên
-export const diem = pgTable("diem", {
-  madiem: serial("madiem").primaryKey(),
-  masv: integer("masv").notNull(),
-  malh: integer("malh").notNull().references(() => lopHoc.malh),
-  diemQt: decimal("diem_qt", { precision: 4, scale: 2 }),
-  diemCk: decimal("diem_ck", { precision: 4, scale: 2 }),
+// Quan hệ phân công & đăng ký lớp
+export const svLh = pgTable(
+  "sv_lh",
+  {
+    masv: integer("masv").notNull().references(() => sinhVien.masv, { onDelete: "cascade" }),
+    malh: integer("malh").notNull().references(() => lopHoc.malh, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.masv, t.malh] })]
+);
+
+export const gvLh = pgTable(
+  "gv_lh",
+  {
+    magv: integer("magv").notNull().references(() => giangVien.magv, { onDelete: "cascade" }),
+    malh: integer("malh").notNull().references(() => lopHoc.malh, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.magv, t.malh] })]
+);
+
+export const teacherAssistant = pgTable(
+  "teacher_assistant",
+  {
+    masv: integer("masv").notNull().references(() => sinhVien.masv, { onDelete: "cascade" }),
+    malh: integer("malh").notNull().references(() => lopHoc.malh, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.masv, t.malh] })]
+);
+
+// Bảng đăng ký lớp học (Phase 1.1)
+export const dangKyLop = pgTable("dang_ky_lop", {
+  madk: serial("madk").primaryKey(),
+  masv: integer("masv").notNull().references(() => sinhVien.masv, { onDelete: "cascade" }),
+  malh: integer("malh").notNull().references(() => lopHoc.malh, { onDelete: "cascade" }),
+  ngayDangKy: timestamp("ngay_dang_ky").defaultNow(),
+  trangThai: varchar("trang_thai", { length: 50 }).default("DangHoc"), // DangHoc, DaHuy, RutHocPhan
 });
 
 // =========================================================================
-// 5. Hệ thống Thời Khóa Biểu & Học Phần thực tế từ Supabase
-// (courses: 8,270 môn | classes: 11,011 lớp | class_schedules: 14,008 ca học)
+// 4. Module Lịch Học & Tiết Học
 // =========================================================================
 
-// 5.1 Bảng Học Phần (courses)
+export const tietHoc = pgTable("tiet_hoc", {
+  tietHocSo: integer("tiet_hoc_so").primaryKey(), // 1, 2, ..., 12
+  startTime: time("start_time").notNull(),
+  endTime: time("end_time").notNull(),
+});
+
+export const lichHoc = pgTable("lich_hoc", {
+  malichhoc: serial("malichhoc").primaryKey(),
+  malh: integer("malh").notNull().references(() => lopHoc.malh, { onDelete: "cascade" }),
+  ngayTrongTuan: integer("ngay_trong_tuan").notNull(), // 2 (Thứ 2) -> 8 (Chủ nhật)
+  tietBatDau: integer("tiet_bat_dau").notNull().references(() => tietHoc.tietHocSo),
+  tietKetThuc: integer("tiet_ket_thuc").notNull().references(() => tietHoc.tietHocSo),
+  diaDiem: varchar("dia_diem", { length: 20 }).notNull(), // vd: "D3-5", "B1"
+  phongHoc: varchar("phong_hoc", { length: 50 }),
+});
+
+export const tuanHoc = pgTable(
+  "tuan_hoc",
+  {
+    math: serial("math").primaryKey(),
+    malichhoc: integer("malichhoc").notNull().references(() => lichHoc.malichhoc, { onDelete: "cascade" }),
+    tuanSo: integer("tuan_so").notNull(),
+  },
+  (t) => [uniqueIndex("idx_tuan_hoc_malichhoc_tuan").on(t.malichhoc, t.tuanSo)]
+);
+
+// =========================================================================
+// 5. Module Điểm Số
+// =========================================================================
+
+export const diem = pgTable(
+  "diem",
+  {
+    madiem: serial("madiem").primaryKey(),
+    masv: integer("masv").notNull().references(() => sinhVien.masv, { onDelete: "cascade" }),
+    malh: integer("malh").notNull().references(() => lopHoc.malh, { onDelete: "cascade" }),
+    diemQt: decimal("diem_qt", { precision: 4, scale: 2 }), // Quá trình (hệ 10)
+    diemCk: decimal("diem_ck", { precision: 4, scale: 2 }), // Cuối kỳ (hệ 10)
+  },
+  (t) => [uniqueIndex("idx_diem_masv_malh").on(t.masv, t.malh)]
+);
+
+// =========================================================================
+// 6. Module Bài Tập & Chia Nhóm
+// =========================================================================
+
+export const baiTap = pgTable("bai_tap", {
+  mabt: serial("mabt").primaryKey(),
+  malh: integer("malh").notNull().references(() => lopHoc.malh, { onDelete: "cascade" }),
+  loai: varchar("loai", { length: 255 }).default("Bài tập lớn"),
+  noiDung: text("noi_dung"),
+  deadline: timestamp("deadline"),
+  deletedAt: timestamp("deleted_at"),
+});
+
+export const nhom = pgTable("nhom", {
+  manhom: serial("manhom").primaryKey(),
+  mabt: integer("mabt").notNull().references(() => baiTap.mabt, { onDelete: "cascade" }),
+  deTai: text("de_tai"),
+  deletedAt: timestamp("deleted_at"),
+});
+
+export const nhomSv = pgTable(
+  "nhom_sv",
+  {
+    manhom: integer("manhom").notNull().references(() => nhom.manhom, { onDelete: "cascade" }),
+    masv: integer("masv").notNull().references(() => sinhVien.masv, { onDelete: "cascade" }),
+  },
+  (t) => [primaryKey({ columns: [t.manhom, t.masv] })]
+);
+
+// =========================================================================
+// 7. Supabase Real-Data Tables (Legacy & Full-TKB support)
+// =========================================================================
+
 export const courses = pgTable("courses", {
   id: varchar("id", { length: 50 }).primaryKey(),
   nameVi: text("name_vi").notNull(),
@@ -108,7 +252,6 @@ export const courses = pgTable("courses", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-// 5.2 Bảng Lớp Học (classes)
 export const classes = pgTable("classes", {
   classCode: varchar("class_code", { length: 50 }).primaryKey(),
   semester: varchar("semester", { length: 20 }).notNull(),
@@ -128,7 +271,6 @@ export const classes = pgTable("classes", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-// 5.3 Bảng Lịch Học / Thời Khóa Biểu (class_schedules)
 export const classSchedules = pgTable("class_schedules", {
   id: bigint("id", { mode: "number" }).primaryKey(),
   classCode: varchar("class_code", { length: 50 }).notNull().references(() => classes.classCode),
@@ -147,32 +289,6 @@ export const classSchedules = pgTable("class_schedules", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
 
-// 5.4 Quan hệ giữa các bảng (Relations)
-export const coursesRelations = relations(courses, ({ many }) => ({
-  classes: many(classes),
-}));
-
-export const classesRelations = relations(classes, ({ one, many }) => ({
-  course: one(courses, {
-    fields: [classes.courseId],
-    references: [courses.id],
-  }),
-  pairedClass: one(classes, {
-    fields: [classes.pairedClassCode],
-    references: [classes.classCode],
-    relationName: "pairedClassRelation",
-  }),
-  schedules: many(classSchedules),
-}));
-
-export const classSchedulesRelations = relations(classSchedules, ({ one }) => ({
-  class: one(classes, {
-    fields: [classSchedules.classCode],
-    references: [classes.classCode],
-  }),
-}));
-
-// 5.5 View tổng hợp TKB (view_tkb_full)
 export const viewTkbFull = pgView("view_tkb_full", {
   semester: varchar("semester"),
   departmentCode: varchar("department_code"),
