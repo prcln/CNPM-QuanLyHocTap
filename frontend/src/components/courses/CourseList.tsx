@@ -10,12 +10,12 @@ import {
   Edit2,
   GraduationCap,
   RefreshCw,
-  AlertCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { LoadingState, ErrorState, EmptyState } from '@/components/shared'
 import { useCourses, useCreateCourse, useUpdateCourse, useDeleteCourse } from '@/hooks/useCourses'
 import { CourseModal } from './CourseModal'
 import type { Course, CourseStatus } from '@/types/student'
@@ -142,29 +142,17 @@ export function CourseList() {
 
       {/* Error state */}
       {error && (
-        <div className="flex items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-          <AlertCircle className="h-5 w-5 shrink-0" />
-          <span>Lỗi khi tải danh sách môn học: {error.message}</span>
-        </div>
+        <ErrorState
+          title="Lỗi khi tải danh sách môn học"
+          message={error.message || 'Không thể lấy dữ liệu học phần từ máy chủ.'}
+          onRetry={() => refetch()}
+          isRetrying={isFetching}
+        />
       )}
 
       {/* Loading Skeletons */}
       {isLoading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3, 4, 5, 6].map((n) => (
-            <Card key={n} className="animate-pulse">
-              <CardHeader className="space-y-2">
-                <div className="h-5 w-24 bg-muted rounded"></div>
-                <div className="h-6 w-3/4 bg-muted rounded"></div>
-                <div className="h-4 w-1/2 bg-muted rounded"></div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                <div className="h-4 w-full bg-muted rounded"></div>
-                <div className="h-4 w-2/3 bg-muted rounded"></div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <LoadingState count={6} />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {courses?.map((course) => {
@@ -272,18 +260,13 @@ export function CourseList() {
           })}
 
           {courses?.length === 0 && (
-            <div className="col-span-full py-16 text-center border rounded-2xl bg-card space-y-3">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                <BookOpen className="h-6 w-6" />
-              </div>
-              <p className="font-semibold text-base">Không tìm thấy môn học nào</p>
-              <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-                Không có học phần nào khớp với từ khóa tìm kiếm hoặc bộ lọc hiện tại.
-              </p>
-              <Button size="sm" onClick={handleOpenAdd} className="gap-1.5 mt-2">
-                <Plus className="h-4 w-4" /> Thêm Môn Học Ngay
-              </Button>
-            </div>
+            <EmptyState
+              title="Không tìm thấy môn học nào"
+              description="Không có học phần nào khớp với từ khóa tìm kiếm hoặc bộ lọc hiện tại."
+              actionLabel="Thêm Môn Học Ngay"
+              onAction={handleOpenAdd}
+              icon={BookOpen}
+            />
           )}
         </div>
       )}

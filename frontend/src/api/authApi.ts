@@ -94,12 +94,11 @@ export const authApi = {
         apiClient.setToken(response.accessToken)
         return { user, accessToken: response.accessToken }
       } catch (err: any) {
-        // If error is 401/400, throw actual message
-        if (err.message && !err.message.includes('Failed to fetch')) {
-          throw err
+        // Do not silently fallback to mock on backend error
+        if (err.message && err.message.includes('Failed to fetch')) {
+          throw new Error('Không thể kết nối đến máy chủ Backend (http://localhost:3000). Vui lòng kiểm tra server hoặc chuyển sang chế độ Mock.')
         }
-        // If server offline, continue down to mock fallback
-        console.warn('Backend unavailable during login, falling back to mock authentication:', err.message)
+        throw err
       }
     }
 

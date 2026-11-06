@@ -6,6 +6,9 @@ export interface CourseSchedule {
   dayOfWeek: DayOfWeek
   timeSlot: string // e.g., "07:30 - 09:50" or "13:30 - 15:50"
   room: string     // e.g., "B1.04", "C302", "Lab 4"
+  startPeriod?: number
+  endPeriod?: number
+  weeks?: number[]
 }
 
 export interface Course {
@@ -19,6 +22,10 @@ export interface Course {
   schedule: CourseSchedule
   colorTag?: string // Hex or color name for UI badges
   description?: string
+  departmentCode?: string
+  classType?: string
+  maxStudents?: number
+  registeredStudents?: number
   createdAt: string
   updatedAt: string
 }
@@ -41,6 +48,14 @@ export interface Assignment {
 export interface GradeRecord {
   id: string
   courseId: string
+  courseName?: string
+  courseCode?: string
+  credits?: number
+  // Chuẩn ĐHBK Hà Nội / ERD (Guardrail 3)
+  diemQt?: number          // Điểm quá trình
+  diemCk?: number          // Điểm cuối kỳ
+  trongSoQt?: number       // Trọng số quá trình (mặc định 0.40)
+  // Các điểm chi tiết / tương thích ngược UI
   attendanceScore: number  // Chuyên cần (10%)
   midtermScore: number     // Giữa kỳ (20% - 30%)
   practicalScore: number   // Thực hành / Bài tập lớn (20%)
@@ -115,4 +130,3 @@ export interface DrlSummary {
   nextRankTarget: number
   criteriaBreakdown: DrlCriteriaScore[]
 }
-

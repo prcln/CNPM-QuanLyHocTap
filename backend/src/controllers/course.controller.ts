@@ -1,42 +1,68 @@
 import { Request, Response } from "express";
 import { courseService } from "../services/course.service.js";
+import { sendSuccess, sendError } from "../utils/response.utils.js";
 
 export class CourseController {
   async getCourses(req: Request, res: Response): Promise<void> {
     try {
-      const { search, isOffered, page, limit } = req.query;
+      const page = req.query.page ? Number(req.query.page) : 1;
+      const limit = req.query.limit ? Number(req.query.limit) : 20;
+
       const data = await courseService.getCourses({
-        search: search as string,
-        isOffered: isOffered !== undefined ? isOffered === "true" || isOffered === "1" : undefined,
-        page: page ? Number(page) : undefined,
-        limit: limit ? Number(limit) : undefined,
+        search: req.query.search as string,
+        page,
+        limit,
       });
-      res.status(200).json(data);
-    } catch (err: any) {
-      res.status(500).json({
-        code: 500,
-        message: err.message || "Lỗi khi lấy danh sách học phần",
-      });
+      sendSuccess(res, data.items, "Lấy danh sách học phần thành công", 200, data.pagination);
+    } catch (error: any) {
+      sendError(res, 500, error.message, error.details);
     }
   }
 
   async getCourseById(req: Request, res: Response): Promise<void> {
     try {
       const id = String(req.params.id);
-      const course = await courseService.getCourseById(id);
-      if (!course) {
-        res.status(404).json({
-          code: 404,
-          message: `Không tìm thấy học phần có mã: ${id}`,
-        });
+      const data = await courseService.getCourseById(id);
+      if (!data) {
+        sendError(res, 404, "Không tìm thấy học phần");
         return;
       }
-      res.status(200).json(course);
-    } catch (err: any) {
-      res.status(500).json({
-        code: 500,
-        message: err.message || "Lỗi khi lấy chi tiết học phần",
-      });
+      sendSuccess(res, data, "Lấy chi tiết học phần thành công");
+    } catch (error: any) {
+      sendError(res, 500, error.message, error.details);
+    }
+  }
+
+  async createCourse(req: Request, res: Response): Promise<void> {
+    try {
+      const data = await courseService.createCourse(req.body);
+      sendSuccess(res, data, "Tạo học phần thành công", 201);
+    } catch (error: any) {
+      sendError(res, 500, error.message, error.details);
+    }
+  }
+
+  async updateCourse(req: Request, res: Response): Promise<void> {
+    try {
+      const id = String(req.params.id);
+      const data = await courseService.updateCourse(id, req.body);
+      if (!data) {
+        sendError(res, 404, "Không tìm thấy học phần");
+        return;
+      }
+      sendSuccess(res, data, "Cập nhật học phần thành công");
+    } catch (error: any) {
+      sendError(res, 500, error.message, error.details);
+    }
+  }
+
+  async deleteCourse(req: Request, res: Response): Promise<void> {
+    try {
+      const id = String(req.params.id);
+      await courseService.deleteCourse(id);
+      sendSuccess(res, { id }, "Xóa học phần thành công");
+    } catch (error: any) {
+      sendError(res, 500, error.message, error.details);
     }
   }
 }

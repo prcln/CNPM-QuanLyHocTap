@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { authService } from "../services/auth.service.js";
 import { jwtConfig } from "../config/jwt.config.js";
 import { AuthenticatedRequest, AuthClientMeta } from "../types/auth.types.js";
+import { sendError, sendSuccess } from "../utils/response.utils.js";
 
 export class AuthController {
   /**
@@ -12,26 +13,17 @@ export class AuthController {
       const { username, password } = req.body;
 
       if (!username || !password) {
-        res.status(400).json({
-          code: 400,
-          message: "Vui lòng nhập đầy đủ username và password",
-        });
+        sendError(res, 400, "Vui lòng nhập đầy đủ username và password");
         return;
       }
 
       if (username.trim().length < 3) {
-        res.status(400).json({
-          code: 400,
-          message: "Tên đăng nhập phải có ít nhất 3 ký tự",
-        });
+        sendError(res, 400, "Tên đăng nhập phải có ít nhất 3 ký tự");
         return;
       }
 
       if (password.length < 6) {
-        res.status(400).json({
-          code: 400,
-          message: "Mật khẩu phải có ít nhất 6 ký tự",
-        });
+        sendError(res, 400, "Mật khẩu phải có ít nhất 6 ký tự");
         return;
       }
 
@@ -52,17 +44,15 @@ export class AuthController {
       });
 
       res.status(201).json({
+        code: 201,
+        message: "Đăng ký tài khoản thành công",
         accessToken: result.accessToken,
         tokenType: "Bearer",
         expiresIn: 15 * 60,
         account: result.account,
       });
     } catch (err: any) {
-      const statusCode = err.statusCode || 500;
-      res.status(statusCode).json({
-        code: statusCode,
-        message: err.message || "Lỗi máy chủ khi đăng ký tài khoản",
-      });
+      sendError(res, err.statusCode || 500, err.message || "Lỗi máy chủ khi đăng ký tài khoản", err.details);
     }
   }
 
@@ -74,10 +64,7 @@ export class AuthController {
       const { username, password } = req.body;
 
       if (!username || !password) {
-        res.status(400).json({
-          code: 400,
-          message: "Vui lòng nhập đầy đủ username và password",
-        });
+        sendError(res, 400, "Vui lòng nhập đầy đủ username và password");
         return;
       }
 
@@ -98,17 +85,15 @@ export class AuthController {
       });
 
       res.status(200).json({
+        code: 200,
+        message: "Đăng nhập thành công",
         accessToken: result.accessToken,
         tokenType: "Bearer",
         expiresIn: 15 * 60, // 15 phút (giây)
         account: result.account,
       });
     } catch (err: any) {
-      const statusCode = err.statusCode || 500;
-      res.status(statusCode).json({
-        code: statusCode,
-        message: err.message || "Lỗi máy chủ khi đăng nhập",
-      });
+      sendError(res, err.statusCode || 500, err.message || "Lỗi máy chủ khi đăng nhập", err.details);
     }
   }
 
@@ -117,15 +102,11 @@ export class AuthController {
    */
   async refresh(req: Request, res: Response): Promise<void> {
     try {
-      // Ưu tiên đọc từ HttpOnly Cookie, fallback sang request body
-      const refreshToken =
+      const rawRefreshToken =
         req.cookies?.[jwtConfig.refreshCookieName] || req.body?.refreshToken;
 
-      if (!refreshToken) {
-        res.status(401).json({
-          code: 401,
-          message: "Không tìm thấy Refresh Token trong Cookie hoặc Request Body",
-        });
+      if (!rawRefreshToken) {
+        sendError(res, 401, "Không tìm thấy Refresh Token hợp lệ");
         return;
       }
 
@@ -134,9 +115,9 @@ export class AuthController {
         ipAddress: req.ip || req.socket.remoteAddress,
       };
 
-      const result = await authService.refreshToken(refreshToken, clientMeta);
+      const result = await authService.refreshToken(rawRefreshToken, clientMeta);
 
-      // Cập nhật HttpOnly Cookie với Refresh Token mới (Xoay vòng)
+      // Cập nhật lại Cookie với token mới
       res.cookie(jwtConfig.refreshCookieName, result.refreshToken, {
         httpOnly: true,
         secure: jwtConfig.isProduction,
@@ -146,17 +127,15 @@ export class AuthController {
       });
 
       res.status(200).json({
+        code: 200,
+        message: "Làm mới Access Token thành công",
         accessToken: result.accessToken,
         tokenType: "Bearer",
         expiresIn: 15 * 60,
         account: result.account,
       });
     } catch (err: any) {
-      const statusCode = err.statusCode || 500;
-      res.status(statusCode).json({
-        code: statusCode,
-        message: err.message || "Lỗi khi làm mới token",
-      });
+      sendError(res, err.statusCode || 401, err.message || "Làm mới Access Token thất bại", err.details);
     }
   }
 
@@ -165,14 +144,13 @@ export class AuthController {
    */
   async logout(req: Request, res: Response): Promise<void> {
     try {
-      const refreshToken =
+      const rawRefreshToken =
         req.cookies?.[jwtConfig.refreshCookieName] || req.body?.refreshToken;
 
-      if (refreshToken) {
-        await authService.logout(refreshToken);
+      if (rawRefreshToken) {
+        await authService.logout(rawRefreshToken);
       }
 
-      // Xóa Cookie
       res.clearCookie(jwtConfig.refreshCookieName, {
         httpOnly: true,
         secure: jwtConfig.isProduction,
@@ -180,46 +158,31 @@ export class AuthController {
         path: "/",
       });
 
-      res.status(200).json({
-        code: 200,
-        message: "Đăng xuất thành công",
-      });
+      sendSuccess(res, null, "Đăng xuất thành công");
     } catch (err: any) {
-      res.status(500).json({
-        code: 500,
-        message: err.message || "Lỗi khi đăng xuất",
-      });
+      sendError(res, 500, err.message || "Lỗi khi đăng xuất", err.details);
     }
   }
 
   /**
-   * Lấy tài khoản hiện tại: GET /api/v1/accounts/me hoặc /api/v1/auth/me
+   * Lấy thông tin tài khoản hiện tại: GET /api/v1/auth/me
    */
   async getMe(req: AuthenticatedRequest, res: Response): Promise<void> {
     try {
-      if (!req.user) {
-        res.status(401).json({
-          code: 401,
-          message: "Chưa xác thực người dùng",
-        });
+      if (!req.user?.matk) {
+        sendError(res, 401, "Chưa xác thực người dùng");
         return;
       }
 
       const account = await authService.getAccountById(req.user.matk);
       if (!account) {
-        res.status(404).json({
-          code: 404,
-          message: "Không tìm thấy tài khoản người dùng",
-        });
+        sendError(res, 404, "Không tìm thấy thông tin tài khoản");
         return;
       }
 
-      res.status(200).json(account);
+      sendSuccess(res, account, "Lấy thông tin tài khoản thành công");
     } catch (err: any) {
-      res.status(500).json({
-        code: 500,
-        message: err.message || "Lỗi khi lấy thông tin tài khoản",
-      });
+      sendError(res, 500, err.message || "Lỗi máy chủ", err.details);
     }
   }
 }
