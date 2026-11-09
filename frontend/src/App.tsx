@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { LandingPage } from '@/components/landing/LandingPage'
@@ -17,18 +17,14 @@ import { useAuth } from '@/context/AuthContext'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BookOpen, CheckSquare, Award, Calendar, LayoutDashboard, Flame, ShieldAlert } from 'lucide-react'
+import { parseRoute, syncUrl, type AppView } from '@/lib/router'
 
-export type AppView = 'landing' | 'portal' | 'login' | 'register'
+export type { AppView }
 
 export default function App() {
   const { isAuthenticated } = useAuth()
-  const [view, setView] = useState<AppView>(() => {
-    if (typeof window !== 'undefined' && localStorage.getItem('cnpm_current_user')) {
-      return 'portal'
-    }
-    return 'landing'
-  })
-  const [activeTab, setActiveTab] = useState<PortalTab>('overview')
+  const [view, setView] = useState<AppView>(() => parseRoute().view)
+  const [activeTab, setActiveTab] = useState<PortalTab>(() => parseRoute().tab || 'overview')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isDark, setIsDark] = useState(() => {
     if (typeof document !== 'undefined') {
@@ -37,13 +33,48 @@ export default function App() {
     return false
   })
 
+  const navigate = useCallback((nextView: AppView, nextTab?: PortalTab) => {
+    setView(nextView)
+    if (nextTab) {
+      setActiveTab(nextTab)
+    }
+    syncUrl(nextView, nextTab || (nextView === 'portal' ? activeTab : undefined))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [activeTab])
+
+  const handleSelectTab = (tab: PortalTab) => {
+    setActiveTab(tab)
+    syncUrl('portal', tab)
+  }
+
   // Listen for 401 Unauthorized events from apiClient to redirect to login
   useEffect(() => {
     const handleUnauthorized = () => {
-      setView('login')
+      navigate('login')
     }
     window.addEventListener('auth:unauthorized', handleUnauthorized)
     return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
+  }, [navigate])
+
+  // Keep route in sync with browser navigation (Back / Forward / Hashchange / Reload)
+  useEffect(() => {
+    const initial = parseRoute()
+    syncUrl(initial.view, initial.view === 'portal' ? initial.tab || 'overview' : undefined, true)
+
+    const handleLocationChange = () => {
+      const next = parseRoute()
+      setView(next.view)
+      if (next.tab) {
+        setActiveTab(next.tab)
+      }
+    }
+
+    window.addEventListener('popstate', handleLocationChange)
+    window.addEventListener('hashchange', handleLocationChange)
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange)
+      window.removeEventListener('hashchange', handleLocationChange)
+    }
   }, [])
 
   const { data: stats } = useStudyStats()
@@ -60,22 +91,21 @@ export default function App() {
     })
   }
 
+  const handleLoginSuccess = (targetTab: PortalTab = 'overview') => {
+    navigate('portal', targetTab)
+  }
+
   const handleEnterPortal = (targetTab?: PortalTab) => {
-    if (!isAuthenticated) {
-      setView('login')
-      window.scrollTo({ top: 0, behavior: 'smooth' })
+    const hasStoredUser = typeof window !== 'undefined' && !!localStorage.getItem('cnpm_current_user')
+    if (!isAuthenticated && !hasStoredUser) {
+      navigate('login')
       return
     }
-    setView('portal')
-    if (targetTab) {
-      setActiveTab(targetTab)
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    navigate('portal', targetTab || activeTab || 'overview')
   }
 
   const handleNavigateHome = () => {
-    setView('landing')
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    navigate('landing')
   }
 
   const tabLabels: Record<PortalTab, { title: string; subtitle: string; icon: React.ComponentType<{ className?: string }> }> = {
@@ -123,7 +153,7 @@ export default function App() {
         toggleDarkMode={toggleDarkMode}
         activeView={view === 'register' ? 'login' : view}
         onNavigateHome={handleNavigateHome}
-        onNavigateLogin={() => setView('login')}
+        onNavigateLogin={() => navigate('login')}
       />
 
       {/* View 1: Landing Page */}
@@ -132,7 +162,7 @@ export default function App() {
           <main className="flex-1">
             <LandingPage
               onEnterPortal={handleEnterPortal}
-              onNavigateLogin={() => setView('login')}
+              onNavigateLogin={() => navigate('login')}
             />
           </main>
           <Footer />
@@ -144,9 +174,9 @@ export default function App() {
         <>
           <main className="flex-1">
             <LoginPage
-              onSuccess={() => handleEnterPortal('overview')}
+              onSuccess={() => handleLoginSuccess('overview')}
               onBackToLanding={handleNavigateHome}
-              onSwitchToRegister={() => setView('register')}
+              onSwitchToRegister={() => navigate('register')}
             />
           </main>
           <Footer />
@@ -158,8 +188,8 @@ export default function App() {
         <>
           <main className="flex-1">
             <RegisterPage
-              onRegisterSuccess={() => handleEnterPortal('overview')}
-              onSwitchToLogin={() => setView('login')}
+              onRegisterSuccess={() => handleLoginSuccess('overview')}
+              onSwitchToLogin={() => navigate('login')}
             />
           </main>
           <Footer />
@@ -179,7 +209,7 @@ export default function App() {
             </p>
             <div className="pt-2 flex flex-col gap-2.5">
               <Button
-                onClick={() => setView('login')}
+                onClick={() => navigate('login')}
                 className="w-full bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-700 hover:from-sky-700 hover:to-blue-700 text-white font-semibold cursor-pointer"
               >
                 Đăng Nhập Ngay
@@ -202,11 +232,11 @@ export default function App() {
           {/* Left Sidebar */}
           <Sidebar
             activeTab={activeTab}
-            onSelectTab={setActiveTab}
+            onSelectTab={handleSelectTab}
             isCollapsed={isSidebarCollapsed}
             onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
             onNavigateLanding={handleNavigateHome}
-            onNavigateLogin={() => setView('login')}
+            onNavigateLogin={() => navigate('login')}
             stats={{
               totalCourses: stats?.totalCourses || 0,
               pendingAssignments: stats?.pendingAssignments || 0,
@@ -242,13 +272,13 @@ export default function App() {
 
               {/* Dynamic Content Body based on tab */}
               {activeTab === 'overview' && (
-                <OverviewDashboard onNavigateTab={setActiveTab} />
+                <OverviewDashboard onNavigateTab={handleSelectTab} />
               )}
               {activeTab === 'courses' && <CourseList />}
               {activeTab === 'assignments' && <AssignmentList />}
               {activeTab === 'grades' && <GradeTracker />}
               {activeTab === 'schedule' && (
-                <ScheduleView onNavigateActivities={() => setActiveTab('activities')} />
+                <ScheduleView onNavigateActivities={() => handleSelectTab('activities')} />
               )}
               {activeTab === 'activities' && <ExtracurricularView />}
             </div>
