@@ -29,6 +29,7 @@ export interface ApiCourseRaw {
   code?: string
   ma_hp?: string
   maHp?: string
+  mahp?: string
   name_vi?: string
   nameVi?: string
   name_en?: string | null
@@ -36,6 +37,7 @@ export interface ApiCourseRaw {
   name?: string
   ten_hp?: string
   tenHp?: string
+  ten?: string
   instructor?: string
   ten_giang_vien?: string
   giang_vien?: string
@@ -47,6 +49,13 @@ export interface ApiCourseRaw {
   so_tin_chi?: number | string | null
   soTinChi?: number | string | null
   tin_chi_dao_tao?: number | string | null
+  tinChiDaoTao?: number | string | null
+  tin_chi_hoc_phi?: number | string | null
+  tinChiHocPhi?: number | string | null
+  bat_buoc?: boolean | null
+  batBuoc?: boolean | null
+  phan_bo?: string | null
+  phanBo?: string | null
   tuition_units?: number | string | null
   tuitionUnits?: number | string | null
   exam_factor?: number | string | null
@@ -58,6 +67,7 @@ export interface ApiCourseRaw {
   trang_thai?: string
   description?: string
   noidung?: string
+  noiDung?: string
   department_code?: string
   departmentCode?: string
   truong?: string
@@ -80,21 +90,22 @@ export interface ApiCourseRaw {
  * Chuyển đổi một bản ghi môn học thô từ Supabase/Express sang ViewModel Course của giao diện
  */
 export const adaptCourseRawToViewModel = (raw: ApiCourseRaw): Course => {
-  const code = String(raw.code || raw.ma_hp || raw.maHp || raw.id || 'HP000')
-  const name = raw.name || raw.nameVi || raw.name_vi || raw.ten_hp || raw.tenHp || 'Học phần không tên'
-  const instructor = raw.instructor || raw.ten_giang_vien || raw.giang_vien || 'Bộ môn phân công'
+  const code = String(raw.code || raw.mahp || raw.ma_hp || raw.maHp || raw.id || 'HP000')
+  const name = String(raw.name || raw.ten || raw.nameVi || raw.name_vi || raw.ten_hp || raw.tenHp || 'Học phần không tên')
+  const instructor = String(raw.instructor || raw.truong || raw.ten_giang_vien || raw.giang_vien || 'Bộ môn phân công')
 
   const creditsRaw =
     raw.credits ??
+    raw.tinChiDaoTao ??
+    raw.tin_chi_dao_tao ??
     raw.so_tin_chi ??
     raw.soTinChi ??
     raw.courseUnits ??
     raw.course_units ??
-    raw.tin_chi_dao_tao ??
     3
   const credits = Math.round(Number(creditsRaw) || 3)
 
-  const semester = raw.semester || raw.hoc_ky || 'HK2 2025-2026'
+  const semester = String(raw.semester || raw.hoc_ky || '20261')
 
   // Trạng thái môn học
   let status: CourseStatus = 'active'
@@ -122,7 +133,7 @@ export const adaptCourseRawToViewModel = (raw: ApiCourseRaw): Course => {
   }
 
   const colorTag = getColorTagByCode(code)
-  const description = raw.description || raw.noidung || raw.nameEn || raw.name_en || ''
+  const description = String(raw.description || raw.noidung || raw.noiDung || raw.nameEn || raw.name_en || '')
   const createdAt = raw.createdAt || raw.created_at || new Date().toISOString()
   const updatedAt = raw.updatedAt || raw.updated_at || createdAt
 
@@ -141,6 +152,9 @@ export const adaptCourseRawToViewModel = (raw: ApiCourseRaw): Course => {
     classType: raw.classType || raw.class_type || raw.loai,
     maxStudents: raw.maxStudents || raw.max_students,
     registeredStudents: raw.registeredStudents || raw.registered_students,
+    tuitionCredits: Number(raw.tinChiHocPhi ?? raw.tin_chi_hoc_phi ?? credits),
+    isCompulsory: raw.batBuoc ?? raw.bat_buoc ?? true,
+    allocation: raw.phanBo || raw.phan_bo || `${credits}(2-1-0-6)`,
     createdAt,
     updatedAt,
   }
@@ -202,6 +216,51 @@ export const adaptClassToCourseView = (
     description: String(hocPhan?.noidung || ''),
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
+  }
+}
+
+/**
+ * Chuyển đổi từ Course ViewModel sang Payload gửi lên Backend API (hoc_phan)
+ */
+export const adaptViewModelToCoursePayload = (
+  data: Partial<Course>,
+): Record<string, unknown> => {
+  const mahp = String(data.code || data.id || '').trim().toUpperCase()
+  const ten = String(data.name || '').trim()
+  const truong = data.departmentCode || data.instructor || 'Trường CNTT & TT'
+  const credits = Number(data.credits) || 3
+  const tuitionCredits = Number(data.tuitionCredits ?? credits)
+  const isCompulsory = data.isCompulsory ?? true
+  const allocation = data.allocation || `${credits}(2-1-0-6)`
+  const description = data.description || ''
+
+  return {
+    mahp,
+    code: mahp,
+    ten,
+    name: ten,
+    truong,
+    departmentCode: truong,
+    instructor: data.instructor || truong,
+    tinChiDaoTao: credits,
+    tin_chi_dao_tao: credits,
+    credits,
+    tinChiHocPhi: tuitionCredits,
+    tin_chi_hoc_phi: tuitionCredits,
+    tuitionCredits,
+    batBuoc: isCompulsory,
+    bat_buoc: isCompulsory,
+    isCompulsory,
+    phanBo: allocation,
+    phan_bo: allocation,
+    allocation,
+    noiDung: description,
+    noidung: description,
+    description,
+    semester: data.semester || '20261',
+    status: data.status || 'active',
+    schedule: data.schedule,
+    colorTag: data.colorTag,
   }
 }
 

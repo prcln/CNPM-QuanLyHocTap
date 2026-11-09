@@ -32,9 +32,13 @@ export function CourseModal({
 }: CourseModalProps) {
   const [code, setCode] = useState('')
   const [name, setName] = useState('')
+  const [departmentCode, setDepartmentCode] = useState('Trường CNTT & TT')
   const [instructor, setInstructor] = useState('')
   const [credits, setCredits] = useState<number>(3)
-  const [semester, setSemester] = useState('HK2 2025-2026')
+  const [tuitionCredits, setTuitionCredits] = useState<number>(3)
+  const [isCompulsory, setIsCompulsory] = useState<boolean>(true)
+  const [allocation, setAllocation] = useState('3(2-1-0-6)')
+  const [semester, setSemester] = useState('20261')
   const [status, setStatus] = useState<CourseStatus>('active')
   const [dayOfWeek, setDayOfWeek] = useState<DayOfWeek>('Monday')
   const [timeSlot, setTimeSlot] = useState('07:30 - 10:00')
@@ -46,8 +50,12 @@ export function CourseModal({
     if (initialData) {
       setCode(initialData.code)
       setName(initialData.name)
+      setDepartmentCode(initialData.departmentCode || 'Trường CNTT & TT')
       setInstructor(initialData.instructor)
       setCredits(initialData.credits)
+      setTuitionCredits(initialData.tuitionCredits ?? initialData.credits)
+      setIsCompulsory(initialData.isCompulsory ?? true)
+      setAllocation(initialData.allocation || `${initialData.credits}(2-1-0-6)`)
       setSemester(initialData.semester)
       setStatus(initialData.status)
       setDayOfWeek(initialData.schedule.dayOfWeek)
@@ -58,9 +66,13 @@ export function CourseModal({
     } else {
       setCode('')
       setName('')
+      setDepartmentCode('Trường CNTT & TT')
       setInstructor('')
       setCredits(3)
-      setSemester('HK2 2025-2026')
+      setTuitionCredits(3)
+      setIsCompulsory(true)
+      setAllocation('3(2-1-0-6)')
+      setSemester('20261')
       setStatus('active')
       setDayOfWeek('Monday')
       setTimeSlot('07:30 - 10:00')
@@ -72,6 +84,14 @@ export function CourseModal({
 
   if (!isOpen) return null
 
+  const handleCreditsChange = (val: number) => {
+    setCredits(val)
+    if (!initialData) {
+      setTuitionCredits(val)
+      setAllocation(`${val}(2-1-0-6)`)
+    }
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!code.trim() || !name.trim()) return
@@ -79,9 +99,13 @@ export function CourseModal({
     onSubmit({
       code: code.trim().toUpperCase(),
       name: name.trim(),
-      instructor: instructor.trim() || 'Chưa phân công',
+      departmentCode: departmentCode.trim() || 'Trường CNTT & TT',
+      instructor: instructor.trim() || departmentCode.trim() || 'Bộ môn phân công',
       credits: Number(credits) || 3,
-      semester,
+      tuitionCredits: Number(tuitionCredits) || Number(credits) || 3,
+      isCompulsory,
+      allocation: allocation.trim() || `${credits}(2-1-0-6)`,
+      semester: semester.trim() || '20261',
       status,
       schedule: {
         dayOfWeek,
@@ -119,52 +143,97 @@ export function CourseModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-4 text-sm">
+          {/* Mã học phần & Tên học phần (Bắt buộc theo CSDL hoc_phan) */}
           <div className="grid grid-cols-3 gap-3">
             <div className="col-span-1 space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground">Mã môn *</label>
+              <label className="text-xs font-semibold text-muted-foreground">Mã học phần *</label>
               <Input
                 required
-                placeholder="VD: SE104"
+                placeholder="VD: IT3040"
                 value={code}
                 onChange={(e) => setCode(e.target.value)}
               />
             </div>
             <div className="col-span-2 space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground">Tên môn học *</label>
+              <label className="text-xs font-semibold text-muted-foreground">Tên học phần *</label>
               <Input
                 required
-                placeholder="VD: Nhập môn Công nghệ Phần mềm"
+                placeholder="VD: Kỹ thuật phần mềm"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
           </div>
 
+          {/* Khoa/Viện quản lý (truong) & Giảng viên phụ trách */}
           <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-muted-foreground">Khoa / Viện quản lý</label>
+              <Input
+                placeholder="VD: Trường CNTT & TT"
+                value={departmentCode}
+                onChange={(e) => setDepartmentCode(e.target.value)}
+              />
+            </div>
             <div className="space-y-1">
               <label className="text-xs font-semibold text-muted-foreground">Giảng viên phụ trách</label>
               <Input
-                placeholder="VD: TS. Nguyễn Văn A"
+                placeholder="VD: TS. Nguyễn Thu Hường"
                 value={instructor}
                 onChange={(e) => setInstructor(e.target.value)}
               />
             </div>
+          </div>
+
+          {/* Tín chỉ học tập, Tín chỉ học phí, Tính chất học phần */}
+          <div className="grid grid-cols-3 gap-3">
             <div className="space-y-1">
-              <label className="text-xs font-semibold text-muted-foreground">Số tín chỉ</label>
+              <label className="text-xs font-semibold text-muted-foreground">TC học tập *</label>
               <Input
                 type="number"
                 min={1}
-                max={10}
+                max={12}
                 value={credits}
-                onChange={(e) => setCredits(Number(e.target.value))}
+                onChange={(e) => handleCreditsChange(Number(e.target.value))}
               />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-muted-foreground">TC học phí</label>
+              <Input
+                type="number"
+                min={1}
+                max={12}
+                value={tuitionCredits}
+                onChange={(e) => setTuitionCredits(Number(e.target.value))}
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-muted-foreground">Tính chất</label>
+              <select
+                value={isCompulsory ? 'compulsory' : 'elective'}
+                onChange={(e) => setIsCompulsory(e.target.value === 'compulsory')}
+                className="w-full rounded-md border bg-background px-2 py-2 text-xs shadow-xs focus:ring-1 focus:ring-ring"
+              >
+                <option value="compulsory">Bắt buộc</option>
+                <option value="elective">Tự chọn</option>
+              </select>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          {/* Phân bổ giờ học, Học kỳ, Trạng thái */}
+          <div className="grid grid-cols-3 gap-3">
+            <div className="space-y-1">
+              <label className="text-xs font-semibold text-muted-foreground">Phân bổ (LT-BT-TH-Tự học)</label>
+              <Input
+                placeholder="3(2-1-0-6)"
+                value={allocation}
+                onChange={(e) => setAllocation(e.target.value)}
+              />
+            </div>
             <div className="space-y-1">
               <label className="text-xs font-semibold text-muted-foreground">Học kỳ</label>
               <Input
+                placeholder="VD: 20261"
                 value={semester}
                 onChange={(e) => setSemester(e.target.value)}
               />
@@ -174,11 +243,11 @@ export function CourseModal({
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as CourseStatus)}
-                className="w-full rounded-md border bg-background px-3 py-2 text-sm shadow-xs focus:ring-1 focus:ring-ring"
+                className="w-full rounded-md border bg-background px-2 py-2 text-xs shadow-xs focus:ring-1 focus:ring-ring"
               >
                 <option value="active">Đang học (Active)</option>
                 <option value="upcoming">Sắp mở (Upcoming)</option>
-                <option value="completed">Đã hoàn thành (Completed)</option>
+                <option value="completed">Đã hoàn thành</option>
               </select>
             </div>
           </div>
@@ -186,7 +255,7 @@ export function CourseModal({
           {/* Schedule section */}
           <div className="rounded-xl border p-3 bg-muted/30 space-y-3">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Lịch học & Phòng
+              Lịch học & Phòng (Lớp học phần)
             </span>
             <div className="grid grid-cols-3 gap-2">
               <div>
@@ -244,11 +313,11 @@ export function CourseModal({
 
           {/* Description */}
           <div className="space-y-1">
-            <label className="text-xs font-semibold text-muted-foreground">Mô tả môn học</label>
+            <label className="text-xs font-semibold text-muted-foreground">Mô tả / Đề cương tóm tắt</label>
             <textarea
               rows={2}
               className="w-full rounded-md border bg-background p-2 text-sm shadow-xs focus:ring-1 focus:ring-ring"
-              placeholder="Mô tả tóm tắt nội dung học tập..."
+              placeholder="Tóm tắt đề cương, yêu cầu và nội dung học tập..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />

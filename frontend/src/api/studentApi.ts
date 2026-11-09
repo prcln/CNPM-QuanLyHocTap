@@ -3,6 +3,7 @@ import { apiClient } from './client'
 import {
   adaptCoursesListResponse,
   adaptCourseRawToViewModel,
+  adaptViewModelToCoursePayload,
   adaptGradesListResponse,
   adaptGradeRawToViewModel,
   adaptViewModelToGradePayload,
@@ -64,9 +65,10 @@ export const studentApi = {
 
     create: async (data: Omit<Course, 'id' | 'createdAt' | 'updatedAt'>): Promise<Course> => {
       if (apiClient.getMode() === 'backend') {
+        const payload = adaptViewModelToCoursePayload(data)
         const res = await apiClient.request<{ data: unknown } | unknown>('/courses', {
           method: 'POST',
-          body: JSON.stringify(data),
+          body: JSON.stringify(payload),
         })
         const raw = res && typeof res === 'object' && 'data' in res ? (res as { data: unknown }).data : res
         if (raw) return adaptCourseRawToViewModel(raw as any)
@@ -81,9 +83,10 @@ export const studentApi = {
       updates: Partial<Omit<Course, 'id' | 'createdAt'>>,
     ): Promise<Course> => {
       if (apiClient.getMode() === 'backend') {
+        const payload = adaptViewModelToCoursePayload(updates)
         const res = await apiClient.request<{ data: unknown } | unknown>(`/courses/${id}`, {
           method: 'PUT',
-          body: JSON.stringify(updates),
+          body: JSON.stringify(payload),
         })
         const raw = res && typeof res === 'object' && 'data' in res ? (res as { data: unknown }).data : res
         if (raw) return adaptCourseRawToViewModel(raw as any)
@@ -111,7 +114,11 @@ export const studentApi = {
   assignments: {
     getAll: async (filters?: AssignmentFilters): Promise<Assignment[]> => {
       if (apiClient.getMode() === 'backend') {
-        const res = await apiClient.request<unknown>('/assignments')
+        const params = new URLSearchParams()
+        if (filters?.courseId && filters.courseId !== 'all') params.append('malh', filters.courseId)
+        if (filters?.search) params.append('search', filters.search)
+        const qs = params.toString() ? `?${params.toString()}` : ''
+        const res = await apiClient.request<unknown>(`/assignments${qs}`)
         return adaptAssignmentsListResponse(res)
       }
       await sleep()
@@ -194,7 +201,8 @@ export const studentApi = {
     ): Promise<GradeRecord> => {
       if (apiClient.getMode() === 'backend') {
         const payload = adaptViewModelToGradePayload(scores)
-        const res = await apiClient.request<{ data: unknown } | unknown>(`/classes/${id}/grades`, {
+        const malh = Number(id.replace(/^g-/, '').replace(/^c-/, '')) || 1
+        const res = await apiClient.request<{ data: unknown } | unknown>(`/students/me/grades/${malh}`, {
           method: 'PUT',
           body: JSON.stringify(payload),
         })

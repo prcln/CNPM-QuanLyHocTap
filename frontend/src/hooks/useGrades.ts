@@ -29,6 +29,7 @@ export const useUpdateGradeRecord = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: studentQueryKeys.grades.all })
       queryClient.invalidateQueries({ queryKey: studentQueryKeys.stats.all })
+      queryClient.invalidateQueries({ queryKey: studentQueryKeys.courses.all })
     },
   })
 }

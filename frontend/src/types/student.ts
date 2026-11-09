@@ -26,6 +26,9 @@ export interface Course {
   classType?: string
   maxStudents?: number
   registeredStudents?: number
+  tuitionCredits?: number
+  isCompulsory?: boolean
+  allocation?: string
   createdAt: string
   updatedAt: string
 }
