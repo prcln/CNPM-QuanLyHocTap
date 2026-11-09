@@ -35,8 +35,41 @@ export class CourseController {
 
   async createCourse(req: Request, res: Response): Promise<void> {
     try {
-      const data = await courseService.createCourse(req.body);
-      sendSuccess(res, data, "Tạo học phần thành công", 201);
+      const mahp = String(req.body.mahp || req.body.code || "").trim().toUpperCase();
+      const ten = String(req.body.ten || req.body.name || "").trim();
+      const truong = req.body.truong || req.body.departmentCode || req.body.instructor || "Trường CNTT & TT";
+      const batBuoc = req.body.batBuoc ?? req.body.isCompulsory ?? true;
+      const tinChiDaoTao = Number(req.body.tinChiDaoTao ?? req.body.credits ?? 3);
+      const tinChiHocPhi = Number(req.body.tinChiHocPhi ?? req.body.tuitionCredits ?? tinChiDaoTao);
+      const phanBo = req.body.phanBo || req.body.allocation || `${tinChiDaoTao}(2-1-0-6)`;
+      const noiDung = req.body.noiDung || req.body.description || "";
+
+      const data = await courseService.createCourse({
+        mahp,
+        ten,
+        truong,
+        batBuoc,
+        tinChiDaoTao,
+        tinChiHocPhi,
+        phanBo,
+        noiDung,
+      });
+
+      const responseData = {
+        ...data,
+        id: data.mahp,
+        code: data.mahp,
+        name: data.ten,
+        instructor: truong,
+        credits: tinChiDaoTao,
+        description: noiDung,
+        semester: req.body.semester || "20261",
+        status: req.body.status || "active",
+        schedule: req.body.schedule,
+        colorTag: req.body.colorTag,
+      };
+
+      sendSuccess(res, responseData, "Tạo học phần thành công", 201);
     } catch (error: any) {
       sendError(res, 500, error.message, error.details);
     }
@@ -45,12 +78,46 @@ export class CourseController {
   async updateCourse(req: Request, res: Response): Promise<void> {
     try {
       const id = String(req.params.id);
-      const data = await courseService.updateCourse(id, req.body);
+      const updatePayload: any = {};
+      if (req.body.ten || req.body.name) updatePayload.ten = req.body.ten || req.body.name;
+      if (req.body.truong || req.body.departmentCode || req.body.instructor) {
+        updatePayload.truong = req.body.truong || req.body.departmentCode || req.body.instructor;
+      }
+      if (req.body.batBuoc !== undefined || req.body.isCompulsory !== undefined) {
+        updatePayload.batBuoc = req.body.batBuoc ?? req.body.isCompulsory;
+      }
+      if (req.body.tinChiDaoTao !== undefined || req.body.credits !== undefined) {
+        updatePayload.tinChiDaoTao = Number(req.body.tinChiDaoTao ?? req.body.credits);
+      }
+      if (req.body.tinChiHocPhi !== undefined || req.body.tuitionCredits !== undefined) {
+        updatePayload.tinChiHocPhi = Number(req.body.tinChiHocPhi ?? req.body.tuitionCredits);
+      }
+      if (req.body.phanBo || req.body.allocation) updatePayload.phanBo = req.body.phanBo || req.body.allocation;
+      if (req.body.noiDung !== undefined || req.body.description !== undefined) {
+        updatePayload.noiDung = req.body.noiDung ?? req.body.description;
+      }
+
+      const data = await courseService.updateCourse(id, Object.keys(updatePayload).length > 0 ? updatePayload : req.body);
       if (!data) {
         sendError(res, 404, "Không tìm thấy học phần");
         return;
       }
-      sendSuccess(res, data, "Cập nhật học phần thành công");
+
+      const responseData = {
+        ...data,
+        id: data.mahp,
+        code: data.mahp,
+        name: data.ten,
+        instructor: data.truong || req.body.instructor || "Bộ môn phân công",
+        credits: data.tinChiDaoTao,
+        description: data.noiDung,
+        semester: req.body.semester || "20261",
+        status: req.body.status || "active",
+        schedule: req.body.schedule,
+        colorTag: req.body.colorTag,
+      };
+
+      sendSuccess(res, responseData, "Cập nhật học phần thành công");
     } catch (error: any) {
       sendError(res, 500, error.message, error.details);
     }

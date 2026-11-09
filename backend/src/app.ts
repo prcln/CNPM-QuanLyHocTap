@@ -15,7 +15,6 @@ import { sendSuccess } from "./utils/response.utils.js";
 
 const app = express();
 
-// 1. CORS middleware theo môi trường
 const isProduction = process.env.NODE_ENV === "production";
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
@@ -34,15 +33,15 @@ app.use(
   })
 );
 
-// 2. Request body & cookies parsers
+// Request body & cookies parsers
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// 3. Request Logging & Metrics middleware
+// Request Logging & Metrics middleware
 app.use(requestLogger);
 
-// 4. Rate Limiter (bảo vệ chống brute-force / DDoS, bỏ qua health & docs)
+// Rate Limiter
 app.use(
   createRateLimiter({
     windowMs: 15 * 60 * 1000,
@@ -56,7 +55,7 @@ app.use(
   })
 );
 
-// 5. Healthcheck & Metrics endpoints (Cả root và /api/v1)
+// Healthcheck & Metrics endpoints
 const healthHandler = async (_req: Request, res: Response) => {
   const dbConnected = await isDbConnected();
   const metrics = getPerformanceMetrics();
@@ -84,11 +83,11 @@ apiV1Router.get("/health", healthHandler);
 app.get("/metrics", metricsHandler);
 apiV1Router.get("/metrics", metricsHandler);
 
-// 5. Mount toàn bộ API routes dưới /api/v1
+// Mount toàn bộ API routes dưới /api/v1
 app.use("/api/v1", apiV1Router);
 
-// 6. Swagger OpenAPI UI Documentation
-// G2: Luôn dùng path.resolve(__dirname, ...) thay vì process.cwd()
+// Swagger OpenAPI UI Documentation
+// Luôn dùng path.resolve(__dirname, ...) thay vì process.cwd()
 const swaggerFilePath =
   process.env.SWAGGER_PATH ||
   path.resolve(__dirname, "../../docs/api_doc_openapi.yaml");
@@ -110,10 +109,10 @@ app.use(
   swaggerUi.setup(swaggerDocument)
 );
 
-// 7. Not Found middleware (404)
+// Not Found middleware (404)
 app.use(notFoundHandler);
 
-// 8. Global Error Handler middleware (500, AppError)
+// Global Error Handler middleware (500, AppError)
 app.use(errorHandler);
 
 export default app;

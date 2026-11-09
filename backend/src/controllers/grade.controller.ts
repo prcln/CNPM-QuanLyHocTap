@@ -38,6 +38,42 @@ export class GradeController {
     }
   }
 
+  async upsertMyGradeInClass(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const profile = await studentService.getMe(req.user!.matk);
+      if (!profile) {
+        sendError(res, 404, "Không tìm thấy hồ sơ sinh viên");
+        return;
+      }
+      const malh = Number(req.params.malh);
+      const { diem_qt, diem_ck, diemQt, diemCk, attendanceScore, midtermScore, practicalScore, finalExamScore } = req.body;
+
+      let finalQt = diemQt !== undefined ? diemQt : diem_qt;
+      let finalCk = diemCk !== undefined ? diemCk : diem_ck;
+
+      if (finalQt === undefined && (attendanceScore !== undefined || midtermScore !== undefined || practicalScore !== undefined)) {
+        const att = Number(attendanceScore) || 0;
+        const mid = Number(midtermScore) || 0;
+        const prac = Number(practicalScore) || 0;
+        finalQt = Math.round((att * 0.2 + mid * 0.4 + prac * 0.4) * 10) / 10;
+      }
+      if (finalCk === undefined && finalExamScore !== undefined) {
+        finalCk = Number(finalExamScore);
+      }
+
+      const data = await gradeService.upsertGrade({
+        malh,
+        masv: profile.masv,
+        diemQt: finalQt,
+        diemCk: finalCk,
+      });
+
+      sendSuccess(res, data, "Cập nhật điểm thành công");
+    } catch (err: any) {
+      sendError(res, 500, err.message, err.details);
+    }
+  }
+
   async getStudentGrades(req: Request, res: Response): Promise<void> {
     try {
       const masv = Number(req.params.masv);
