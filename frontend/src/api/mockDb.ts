@@ -17,6 +17,9 @@ import {
   INITIAL_DRL_SUMMARY,
 } from './mock/mockData'
 import { calculateGradeDetail } from '@/lib/score.utils'
+import { getSimulatedLatency, setSimulatedLatency, sleep } from '@/lib/latency'
+
+export { getSimulatedLatency, setSimulatedLatency, sleep }
 
 interface DbSchema {
   courses: Course[]
@@ -33,22 +36,6 @@ let inMemoryDb: DbSchema = {
   grades: [...INITIAL_GRADES],
   activities: [...INITIAL_ACTIVITIES],
   drlSummary: { ...INITIAL_DRL_SUMMARY },
-}
-
-let inMemoryLatency = 400
-
-// Latency management (in-memory)
-export const getSimulatedLatency = (): number => {
-  return inMemoryLatency
-}
-
-export const setSimulatedLatency = (ms: number): void => {
-  inMemoryLatency = ms
-}
-
-export const sleep = (ms = getSimulatedLatency()): Promise<void> => {
-  if (ms <= 0) return Promise.resolve()
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 const loadDb = (): DbSchema => {

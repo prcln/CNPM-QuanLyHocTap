@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import { sleep } from './mockDb'
+import { sleep } from '@/lib/latency'
 import type { AuthUser, LoginCredentials, AuthLoginResponse } from '@/types/auth'
 
 export interface DemoAccount {
