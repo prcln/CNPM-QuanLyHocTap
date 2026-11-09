@@ -14,9 +14,8 @@ import { ScheduleView } from '@/components/schedule/ScheduleView'
 import { ExtracurricularView } from '@/components/activities/ExtracurricularView'
 import { useStudyStats } from '@/hooks/useStudyStats'
 import { useAuth } from '@/context/AuthContext'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { BookOpen, CheckSquare, Award, Calendar, LayoutDashboard, Flame, ShieldAlert } from 'lucide-react'
+import { ShieldAlert } from 'lucide-react'
 import { parseRoute, syncUrl, type AppView } from '@/lib/router'
 
 export type { AppView }
@@ -107,42 +106,6 @@ export default function App() {
   const handleNavigateHome = () => {
     navigate('landing')
   }
-
-  const tabLabels: Record<PortalTab, { title: string; subtitle: string; icon: React.ComponentType<{ className?: string }> }> = {
-    overview: {
-      title: 'Bảng Điều Khiển Tổng Quan',
-      subtitle: 'Xem nhanh tiến độ học tập, lịch học trong ngày và deadline cần nộp gấp',
-      icon: LayoutDashboard,
-    },
-    courses: {
-      title: 'Học Phần & Lớp Học',
-      subtitle: 'Danh sách các môn học đăng ký trong học kỳ, số tín chỉ và giảng viên phụ trách',
-      icon: BookOpen,
-    },
-    assignments: {
-      title: 'Bài Tập & Deadline',
-      subtitle: 'Theo dõi hạn nộp bài tập, phân cấp mức độ ưu tiên và đếm ngược thời gian thực',
-      icon: CheckSquare,
-    },
-    grades: {
-      title: 'Bảng Điểm & GPA Học Kỳ',
-      subtitle: 'Tính điểm trung bình học phần, quy đổi sang thang điểm 4 và xếp loại học lực chuẩn tín chỉ',
-      icon: Award,
-    },
-    schedule: {
-      title: 'Thời Khóa Biểu Tuần',
-      subtitle: 'Lưới hiển thị lịch học theo ngày và ca học trong tuần chuẩn QLĐT Bách Khoa HUST',
-      icon: Calendar,
-    },
-    activities: {
-      title: 'Hoạt Động Ngoại Khóa & Săn ĐRL',
-      subtitle: 'Theo dõi sự kiện Đoàn - Hội, đăng ký tham gia và săn Điểm Rèn Luyện (ĐRL) chuẩn CTSV',
-      icon: Flame,
-    },
-  }
-
-  const currentTabMeta = tabLabels[activeTab]
-  const TabIcon = currentTabMeta.icon
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors flex flex-col">
@@ -246,30 +209,6 @@ export default function App() {
           {/* Right Main Portal Content */}
           <main className="flex-1 overflow-y-auto subtle-mesh p-4 sm:p-6 lg:p-8 space-y-6">
             <div className="max-w-7xl mx-auto space-y-6">
-              {/* Sub-header for active portal tab */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-border/60">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                      <TabIcon className="h-5 w-5" />
-                    </div>
-                    <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                      {currentTabMeta.title}
-                    </h1>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {currentTabMeta.subtitle}
-                  </p>
-                </div>
-
-                {/* Breadcrumb pill */}
-                <div className="flex items-center gap-2 self-start sm:self-auto">
-                  <Badge variant="outline" className="text-xs px-2.5 py-1 font-medium bg-card/60">
-                    Cổng Sinh Viên / {currentTabMeta.title}
-                  </Badge>
-                </div>
-              </div>
-
               {/* Dynamic Content Body based on tab */}
               {activeTab === 'overview' && (
                 <OverviewDashboard onNavigateTab={handleSelectTab} />

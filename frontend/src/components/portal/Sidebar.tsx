@@ -8,12 +8,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ExternalLink,
-  UserCheck,
   Flame,
   LogOut,
-  ShieldAlert,
-  School,
-  GraduationCap,
 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -43,7 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onNavigateLogin,
   stats,
 }) => {
-  const { user, logout } = useAuth()
+  const { logout } = useAuth()
 
   const navItems = [
     {
@@ -85,25 +81,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     },
   ]
 
-  const displayName = user?.fullName || 'Nguyễn Văn An'
-  const initials = displayName
-    .split(' ')
-    .filter(Boolean)
-    .slice(-2)
-    .map((w) => w[0])
-    .join('')
-    .toUpperCase() || 'SV'
-
-  const subtitle =
-    user?.role === 'AD'
-      ? 'Quản Trị Viên Hệ Thống'
-      : user?.role === 'GV'
-      ? `${user.lecturerId || 'GV082'} • Giảng Viên`
-      : `MSSV: ${user?.studentId || '20210001'} • K66`
-
-  const RoleIcon =
-    user?.role === 'AD' ? ShieldAlert : user?.role === 'GV' ? School : GraduationCap
-
   const handleLogout = async () => {
     await logout()
     if (onNavigateLogin) {
@@ -119,34 +96,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
         isCollapsed ? 'w-20' : 'w-64'
       }`}
     >
-      {/* Student Profile Card Header */}
-      <div className="p-4 border-b">
-        <div className="flex items-center gap-3">
-          <div
-            className={`w-10 h-10 rounded-xl flex items-center justify-center text-white font-bold text-sm shadow-md shrink-0 ${
-              user?.role === 'AD'
-                ? 'bg-gradient-to-tr from-amber-500 via-orange-600 to-red-600'
-                : user?.role === 'GV'
-                ? 'bg-gradient-to-tr from-emerald-500 via-teal-600 to-cyan-700'
-                : 'bg-gradient-to-tr from-sky-500 via-blue-600 to-cyan-700'
-            }`}
-          >
-            {initials}
-          </div>
-          {!isCollapsed && (
-            <div className="overflow-hidden flex-1 min-w-0">
-              <div className="flex items-center gap-1.5">
-                <h4 className="font-bold text-sm text-foreground truncate">{displayName}</h4>
-                <UserCheck className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
-              </div>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <RoleIcon className="h-3 w-3 text-muted-foreground shrink-0" />
-                <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
 
       {/* Navigation list */}
       <div className="flex-1 p-3 space-y-1.5 overflow-y-auto">
