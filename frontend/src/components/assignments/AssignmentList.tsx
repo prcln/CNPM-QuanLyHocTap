@@ -15,7 +15,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
-import { LoadingState, ErrorState, EmptyState } from '@/components/shared'
+import { LoadingState, ErrorState, EmptyState, useToast, useConfirm } from '@/components/shared'
 import {
   useAssignments,
   useCreateAssignment,
@@ -47,6 +47,8 @@ export function AssignmentList() {
   const updateMutation = useUpdateAssignment()
   const toggleMutation = useToggleAssignmentStatus()
   const deleteMutation = useDeleteAssignment()
+  const { toast } = useToast()
+  const confirm = useConfirm()
 
   const handleOpenAdd = () => {
     setEditingAssignment(null)
@@ -58,25 +60,47 @@ export function AssignmentList() {
     setIsModalOpen(true)
   }
 
-  const handleDelete = (id: string, title: string) => {
-    if (window.confirm(`Bạn có chắc muốn xóa bài tập "${title}"?`)) {
-      deleteMutation.mutate(id)
+  const handleDelete = async (id: string, title: string) => {
+    const ok = await confirm({
+      title: 'Xóa Bài Tập',
+      description: `Bạn có chắc muốn xóa bài tập "${title}"? Thao tác này sẽ xóa vĩnh viễn nhiệm vụ khỏi danh sách theo dõi.`,
+      confirmText: 'Xóa bài tập',
+      variant: 'danger',
+    })
+    if (ok) {
+      deleteMutation.mutate(id, {
+        onSuccess: () => toast.success(`Đã xóa bài tập "${title}" thành công.`),
+        onError: () => toast.error('Không thể xóa bài tập. Vui lòng thử lại.'),
+      })
     }
   }
 
   const handleToggle = (id: string) => {
-    toggleMutation.mutate(id)
+    toggleMutation.mutate(id, {
+      onSuccess: () => toast.info('Đã cập nhật trạng thái bài tập.'),
+      onError: () => toast.error('Cập nhật trạng thái thất bại.'),
+    })
   }
 
   const handleFormSubmit = (data: Omit<Assignment, 'id' | 'createdAt'>) => {
     if (editingAssignment) {
       updateMutation.mutate(
         { id: editingAssignment.id, updates: data },
-        { onSuccess: () => setIsModalOpen(false) },
+        {
+          onSuccess: () => {
+            setIsModalOpen(false)
+            toast.success(`Cập nhật bài tập "${data.title}" thành công.`)
+          },
+          onError: () => toast.error('Cập nhật bài tập thất bại.'),
+        },
       )
     } else {
       createMutation.mutate(data, {
-        onSuccess: () => setIsModalOpen(false),
+        onSuccess: () => {
+          setIsModalOpen(false)
+          toast.success(`Thêm mới bài tập "${data.title}" thành công.`)
+        },
+        onError: () => toast.error('Thêm mới bài tập thất bại.'),
       })
     }
   }

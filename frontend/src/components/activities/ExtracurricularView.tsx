@@ -19,6 +19,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { useToast, useConfirm } from '@/components/shared'
 import {
   useActivities,
   useDrlSummary,
@@ -35,6 +36,34 @@ export function ExtracurricularView() {
   const { data: activities = [], isLoading } = useActivities()
   const { data: drlSummary } = useDrlSummary()
   const toggleRegistrationMutation = useToggleActivityRegistration()
+  const { toast } = useToast()
+  const confirm = useConfirm()
+
+  const handleToggleActivity = async (act: ExtracurricularActivity) => {
+    if (act.registered) {
+      const ok = await confirm({
+        title: 'Hủy Đăng Ký Hoạt Động',
+        description: `Bạn có chắc muốn hủy đăng ký tham gia hoạt động "${act.title}"? Điểm rèn luyện (+${act.drlPoints} ĐRL) sẽ không được tính.`,
+        confirmText: 'Hủy đăng ký',
+        variant: 'warning',
+      })
+      if (!ok) return
+    }
+
+    toggleRegistrationMutation.mutate(act.id, {
+      onSuccess: () => {
+        if (act.registered) {
+          toast.info(`Đã hủy đăng ký "${act.title}".`)
+        } else {
+          toast.success(`Đăng ký thành công "${act.title}" (+${act.drlPoints} ĐRL)!`)
+        }
+        if (activeModalActivity && activeModalActivity.id === act.id) {
+          setActiveModalActivity((prev) => (prev ? { ...prev, registered: !prev.registered } : null))
+        }
+      },
+      onError: () => toast.error('Thao tác không thành công. Vui lòng thử lại.'),
+    })
+  }
 
   // Filter activities
   const filteredActivities = useMemo(() => {
@@ -366,7 +395,7 @@ export function ExtracurricularView() {
                     <Button
                       variant={isReg ? 'secondary' : 'default'}
                       size="sm"
-                      onClick={() => toggleRegistrationMutation.mutate(act.id)}
+                      onClick={() => handleToggleActivity(act)}
                       disabled={toggleRegistrationMutation.isPending}
                       className={`flex-1 rounded-xl text-xs font-semibold h-9 transition-colors ${
                         isReg
@@ -491,10 +520,7 @@ export function ExtracurricularView() {
               <Button
                 size="sm"
                 disabled={toggleRegistrationMutation.isPending}
-                onClick={() => {
-                  toggleRegistrationMutation.mutate(activeModalActivity.id)
-                  setActiveModalActivity((prev) => (prev ? { ...prev, registered: !prev.registered } : null))
-                }}
+                onClick={() => handleToggleActivity(activeModalActivity)}
                 className={`rounded-xl text-xs font-semibold ${
                   activeModalActivity.registered
                     ? 'bg-muted text-foreground hover:bg-rose-100 dark:hover:bg-rose-950/60 hover:text-rose-600'
