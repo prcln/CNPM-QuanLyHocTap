@@ -35,7 +35,7 @@ export async function runSeeds() {
         (2, 'gv_huong', ${userHash}, 'GV'),
         (3, 'sv_20210001', ${userHash}, 'SV'),
         (4, 'sv_20210002', ${userHash}, 'SV')
-      ON CONFLICT (username) DO NOTHING;
+      ON CONFLICT DO NOTHING;
     `;
 
     // 3. Sinh viên
