@@ -15,6 +15,7 @@ router.put("/me/grades/:malh", authenticateToken, requireRole("SV"), (req, res) 
 router.post("/me/grades/:malh", authenticateToken, requireRole("SV"), (req, res) => gradeController.upsertMyGradeInClass(req, res));
 router.get("/me/gpa", authenticateToken, requireRole("SV"), (req, res) => studentController.getGpa(req, res));
 router.get("/me/cpa", authenticateToken, requireRole("SV"), (req, res) => studentController.getCpa(req, res));
+router.get("/me/stats", authenticateToken, requireRole("SV"), (req, res) => studentController.getStats(req, res));
 router.get("/me/schedule", authenticateToken, requireRole("SV"), (req, res) => scheduleController.getMySchedule(req, res));
 router.get("/me/classes", authenticateToken, requireRole("SV"), (req, res) => studentController.getMyClasses(req, res));
 router.post("/me/classes/:malh", authenticateToken, requireRole("SV"), (req, res) => studentController.registerClass(req, res));

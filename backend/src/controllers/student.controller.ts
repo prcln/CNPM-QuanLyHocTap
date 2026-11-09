@@ -171,6 +171,20 @@ export class StudentController {
       sendError(res, 500, err.message, err.details);
     }
   }
+
+  async getStats(req: AuthenticatedRequest, res: Response): Promise<void> {
+    try {
+      const profile = await studentService.getMe(req.user!.matk);
+      if (!profile) {
+        sendError(res, 404, "Không tìm thấy hồ sơ sinh viên");
+        return;
+      }
+      const data = await studentService.getStats(profile.masv);
+      sendSuccess(res, data, "Lấy thống kê học tập sinh viên thành công");
+    } catch (err: any) {
+      sendError(res, 500, err.message, err.details);
+    }
+  }
 }
 
 export const studentController = new StudentController();
