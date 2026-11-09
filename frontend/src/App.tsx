@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Navbar } from '@/components/layout/Navbar'
 import { Footer } from '@/components/layout/Footer'
 import { LandingPage } from '@/components/landing/LandingPage'
@@ -13,14 +13,17 @@ import { GradeTracker } from '@/components/grades/GradeTracker'
 import { ScheduleView } from '@/components/schedule/ScheduleView'
 import { ExtracurricularView } from '@/components/activities/ExtracurricularView'
 import { useStudyStats } from '@/hooks/useStudyStats'
-import { Badge } from '@/components/ui/badge'
-import { BookOpen, CheckSquare, Award, Calendar, LayoutDashboard, Flame } from 'lucide-react'
+import { useAuth } from '@/context/AuthContext'
+import { Button } from '@/components/ui/button'
+import { ShieldAlert } from 'lucide-react'
+import { parseRoute, syncUrl, type AppView } from '@/lib/router'
 
-export type AppView = 'landing' | 'portal' | 'login' | 'register'
+export type { AppView }
 
 export default function App() {
-  const [view, setView] = useState<AppView>('portal')
-  const [activeTab, setActiveTab] = useState<PortalTab>('overview')
+  const { isAuthenticated } = useAuth()
+  const [view, setView] = useState<AppView>(() => parseRoute().view)
+  const [activeTab, setActiveTab] = useState<PortalTab>(() => parseRoute().tab || 'overview')
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false)
   const [isDark, setIsDark] = useState(() => {
     if (typeof document !== 'undefined') {
@@ -28,6 +31,50 @@ export default function App() {
     }
     return false
   })
+
+  const navigate = useCallback((nextView: AppView, nextTab?: PortalTab) => {
+    setView(nextView)
+    if (nextTab) {
+      setActiveTab(nextTab)
+    }
+    syncUrl(nextView, nextTab || (nextView === 'portal' ? activeTab : undefined))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }, [activeTab])
+
+  const handleSelectTab = (tab: PortalTab) => {
+    setActiveTab(tab)
+    syncUrl('portal', tab)
+  }
+
+  // Listen for 401 Unauthorized events from apiClient to redirect to login
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      navigate('login')
+    }
+    window.addEventListener('auth:unauthorized', handleUnauthorized)
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized)
+  }, [navigate])
+
+  // Keep route in sync with browser navigation (Back / Forward / Hashchange / Reload)
+  useEffect(() => {
+    const initial = parseRoute()
+    syncUrl(initial.view, initial.view === 'portal' ? initial.tab || 'overview' : undefined, true)
+
+    const handleLocationChange = () => {
+      const next = parseRoute()
+      setView(next.view)
+      if (next.tab) {
+        setActiveTab(next.tab)
+      }
+    }
+
+    window.addEventListener('popstate', handleLocationChange)
+    window.addEventListener('hashchange', handleLocationChange)
+    return () => {
+      window.removeEventListener('popstate', handleLocationChange)
+      window.removeEventListener('hashchange', handleLocationChange)
+    }
+  }, [])
 
   const { data: stats } = useStudyStats()
 
@@ -43,54 +90,22 @@ export default function App() {
     })
   }
 
+  const handleLoginSuccess = (targetTab: PortalTab = 'overview') => {
+    navigate('portal', targetTab)
+  }
+
   const handleEnterPortal = (targetTab?: PortalTab) => {
-    setView('portal')
-    if (targetTab) {
-      setActiveTab(targetTab)
+    const hasStoredUser = typeof window !== 'undefined' && !!localStorage.getItem('cnpm_current_user')
+    if (!isAuthenticated && !hasStoredUser) {
+      navigate('login')
+      return
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    navigate('portal', targetTab || activeTab || 'overview')
   }
 
   const handleNavigateHome = () => {
-    setView('landing')
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    navigate('landing')
   }
-
-  const tabLabels: Record<PortalTab, { title: string; subtitle: string; icon: React.ComponentType<{ className?: string }> }> = {
-    overview: {
-      title: 'Bảng Điều Khiển Tổng Quan',
-      subtitle: 'Xem nhanh tiến độ học tập, lịch học trong ngày và deadline cần nộp gấp',
-      icon: LayoutDashboard,
-    },
-    courses: {
-      title: 'Học Phần & Lớp Học',
-      subtitle: 'Danh sách các môn học đăng ký trong học kỳ, số tín chỉ và giảng viên phụ trách',
-      icon: BookOpen,
-    },
-    assignments: {
-      title: 'Bài Tập & Deadline',
-      subtitle: 'Theo dõi hạn nộp bài tập, phân cấp mức độ ưu tiên và đếm ngược thời gian thực',
-      icon: CheckSquare,
-    },
-    grades: {
-      title: 'Bảng Điểm & GPA Học Kỳ',
-      subtitle: 'Tính điểm trung bình học phần, quy đổi sang thang điểm 4 và xếp loại học lực chuẩn tín chỉ',
-      icon: Award,
-    },
-    schedule: {
-      title: 'Thời Khóa Biểu Tuần',
-      subtitle: 'Lưới hiển thị lịch học theo ngày và ca học trong tuần chuẩn QLĐT Bách Khoa HUST',
-      icon: Calendar,
-    },
-    activities: {
-      title: 'Hoạt Động Ngoại Khóa & Săn ĐRL',
-      subtitle: 'Theo dõi sự kiện Đoàn - Hội, đăng ký tham gia và săn Điểm Rèn Luyện (ĐRL) chuẩn CTSV',
-      icon: Flame,
-    },
-  }
-
-  const currentTabMeta = tabLabels[activeTab]
-  const TabIcon = currentTabMeta.icon
 
   return (
     <div className="min-h-screen bg-background text-foreground transition-colors flex flex-col">
@@ -101,7 +116,7 @@ export default function App() {
         toggleDarkMode={toggleDarkMode}
         activeView={view === 'register' ? 'login' : view}
         onNavigateHome={handleNavigateHome}
-        onNavigateLogin={() => setView('login')}
+        onNavigateLogin={() => navigate('login')}
       />
 
       {/* View 1: Landing Page */}
@@ -110,7 +125,7 @@ export default function App() {
           <main className="flex-1">
             <LandingPage
               onEnterPortal={handleEnterPortal}
-              onNavigateLogin={() => setView('login')}
+              onNavigateLogin={() => navigate('login')}
             />
           </main>
           <Footer />
@@ -122,9 +137,9 @@ export default function App() {
         <>
           <main className="flex-1">
             <LoginPage
-              onSuccess={() => handleEnterPortal('overview')}
+              onSuccess={() => handleLoginSuccess('overview')}
               onBackToLanding={handleNavigateHome}
-              onSwitchToRegister={() => setView('register')}
+              onSwitchToRegister={() => navigate('register')}
             />
           </main>
           <Footer />
@@ -136,25 +151,55 @@ export default function App() {
         <>
           <main className="flex-1">
             <RegisterPage
-              onRegisterSuccess={() => handleEnterPortal('overview')}
-              onSwitchToLogin={() => setView('login')}
+              onRegisterSuccess={() => handleLoginSuccess('overview')}
+              onSwitchToLogin={() => navigate('login')}
             />
           </main>
           <Footer />
         </>
       )}
 
-      {/* View 4: Student Portal with Sidebar Dashboard */}
-      {view === 'portal' && (
+      {/* View 4: Protected Portal Route Guard */}
+      {view === 'portal' && !isAuthenticated && (
+        <main className="flex-1 flex items-center justify-center p-6 bg-background">
+          <div className="max-w-md w-full text-center space-y-4 p-8 border border-border/80 rounded-2xl bg-card shadow-xl">
+            <div className="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+              <ShieldAlert className="w-8 h-8" />
+            </div>
+            <h2 className="text-2xl font-bold tracking-tight text-foreground">Yêu Cầu Đăng Nhập</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Bạn cần đăng nhập để truy cập Cổng Học Tập và tra cứu thông tin học tập cá nhân theo quy định bảo mật hệ thống.
+            </p>
+            <div className="pt-2 flex flex-col gap-2.5">
+              <Button
+                onClick={() => navigate('login')}
+                className="w-full bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-700 hover:from-sky-700 hover:to-blue-700 text-white font-semibold cursor-pointer"
+              >
+                Đăng Nhập Ngay
+              </Button>
+              <Button
+                variant="outline"
+                onClick={handleNavigateHome}
+                className="w-full cursor-pointer"
+              >
+                Quay Lại Trang Chủ
+              </Button>
+            </div>
+          </div>
+        </main>
+      )}
+
+      {/* View 4: Authenticated Student Portal with Sidebar Dashboard */}
+      {view === 'portal' && isAuthenticated && (
         <div className="flex-1 flex overflow-hidden">
           {/* Left Sidebar */}
           <Sidebar
             activeTab={activeTab}
-            onSelectTab={setActiveTab}
+            onSelectTab={handleSelectTab}
             isCollapsed={isSidebarCollapsed}
             onToggleCollapse={() => setIsSidebarCollapsed((prev) => !prev)}
             onNavigateLanding={handleNavigateHome}
-            onNavigateLogin={() => setView('login')}
+            onNavigateLogin={() => navigate('login')}
             stats={{
               totalCourses: stats?.totalCourses || 0,
               pendingAssignments: stats?.pendingAssignments || 0,
@@ -164,39 +209,15 @@ export default function App() {
           {/* Right Main Portal Content */}
           <main className="flex-1 overflow-y-auto subtle-mesh p-4 sm:p-6 lg:p-8 space-y-6">
             <div className="max-w-7xl mx-auto space-y-6">
-              {/* Sub-header for active portal tab */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 border-b border-border/60">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                      <TabIcon className="h-5 w-5" />
-                    </div>
-                    <h1 className="text-xl sm:text-2xl font-black tracking-tight text-foreground">
-                      {currentTabMeta.title}
-                    </h1>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    {currentTabMeta.subtitle}
-                  </p>
-                </div>
-
-                {/* Breadcrumb pill */}
-                <div className="flex items-center gap-2 self-start sm:self-auto">
-                  <Badge variant="outline" className="text-xs px-2.5 py-1 font-medium bg-card/60">
-                    Cổng Sinh Viên / {currentTabMeta.title}
-                  </Badge>
-                </div>
-              </div>
-
               {/* Dynamic Content Body based on tab */}
               {activeTab === 'overview' && (
-                <OverviewDashboard onNavigateTab={setActiveTab} />
+                <OverviewDashboard onNavigateTab={handleSelectTab} />
               )}
               {activeTab === 'courses' && <CourseList />}
               {activeTab === 'assignments' && <AssignmentList />}
               {activeTab === 'grades' && <GradeTracker />}
               {activeTab === 'schedule' && (
-                <ScheduleView onNavigateActivities={() => setActiveTab('activities')} />
+                <ScheduleView onNavigateActivities={() => handleSelectTab('activities')} />
               )}
               {activeTab === 'activities' && <ExtracurricularView />}
             </div>

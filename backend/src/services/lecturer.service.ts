@@ -12,7 +12,10 @@ export class LecturerService {
       err.statusCode = 404;
       throw err;
     }
-    return lecturerRepository.update(lecturer.magv, data);
+    const safeData: Partial<LecturerData> = {};
+    if (data.email !== undefined) safeData.email = data.email;
+    if (data.truong !== undefined) safeData.truong = data.truong;
+    return lecturerRepository.update(lecturer.magv, safeData);
   }
 
   async getLecturers(filters: { search?: string; page?: number; limit?: number } = {}) {

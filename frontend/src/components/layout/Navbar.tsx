@@ -1,5 +1,5 @@
 import React from 'react'
-import { ArrowRight, Sun, Moon, Sparkles, BookOpen, LogIn, LogOut, User } from 'lucide-react'
+import { ArrowRight, Sun, Moon, LogIn, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { useAuth } from '@/context/AuthContext'
@@ -21,7 +21,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onNavigateHome,
   onNavigateLogin,
 }) => {
-  const { user, isAuthenticated, logout } = useAuth()
+  const { user, isAuthenticated } = useAuth()
 
   const getRoleBadge = (role?: string) => {
     switch (role) {
@@ -67,7 +67,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Navigation Links */}
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          {activeView === 'landing' ? (
+          {activeView === 'landing' && (
             <>
               <a href="#features" className="hover:text-foreground transition-colors">
                 Tính năng
@@ -79,14 +79,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 Hỏi đáp (FAQ)
               </a>
             </>
-          ) : (
-            <button
-              onClick={onNavigateHome}
-              className="flex items-center gap-1.5 hover:text-foreground transition-colors cursor-pointer"
-            >
-              <BookOpen className="h-4 w-4" />
-              <span>Về Trang Giới Thiệu</span>
-            </button>
           )}
         </nav>
 
@@ -128,7 +120,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </Badge>
               </div>
 
-              {activeView !== 'portal' ? (
+              {activeView !== 'portal' && (
                 <Button
                   onClick={onEnterPortal}
                   className="rounded-xl bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-700 hover:from-sky-700 hover:to-blue-700 text-white font-semibold shadow-md shadow-sky-500/25 px-4 h-10 text-xs sm:text-sm cursor-pointer"
@@ -138,27 +130,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 </Button>
-              ) : (
-                <Badge variant="secondary" className="hidden lg:flex px-3 py-1 font-bold items-center gap-1.5 text-xs bg-sky-50 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-300 dark:border-sky-800">
-                  <Sparkles className="h-3.5 w-3.5 text-sky-500" />
-                  <span>Cổng Đang Mở</span>
-                </Badge>
               )}
-
-              {/* Logout Button */}
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  logout()
-                  onNavigateLogin()
-                }}
-                className="h-10 w-10 rounded-xl border border-border/60 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 cursor-pointer"
-                title="Đăng xuất khỏi hệ thống"
-                aria-label="Đăng xuất"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
             </div>
           ) : (
             <div className="flex items-center gap-2">

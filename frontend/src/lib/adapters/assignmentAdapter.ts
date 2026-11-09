@@ -16,8 +16,10 @@ export interface ApiAssignmentRaw {
   tenBt?: string
   description?: string
   noi_dung?: string
+  noiDung?: string
   mo_ta?: string
   moTa?: string
+  loai?: string
   due_date?: string
   dueDate?: string
   deadline?: string | Date
@@ -69,8 +71,8 @@ export const adaptAssignmentRawToViewModel = (raw: ApiAssignmentRaw): Assignment
   const courseId = String(
     raw.courseId || raw.course_id || raw.malh || raw.ma_lh || raw.classCode || raw.class_code || 'HP000'
   )
-  const title = raw.title || raw.tieu_de || raw.ten_bt || raw.tenBt || 'Bài tập không tên'
-  const description = raw.description || raw.noi_dung || raw.mo_ta || raw.moTa || ''
+  const title = raw.title || raw.tieu_de || raw.ten_bt || raw.tenBt || raw.loai || 'Bài tập không tên'
+  const description = raw.description || raw.noi_dung || raw.noiDung || raw.mo_ta || raw.moTa || ''
 
   let dueDate = ''
   const rawDue = raw.dueDate || raw.due_date || raw.deadline || raw.han_nop || raw.ngay_nop
