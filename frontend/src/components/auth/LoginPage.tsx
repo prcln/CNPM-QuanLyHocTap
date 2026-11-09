@@ -13,14 +13,13 @@ import {
   CheckCircle2,
   AlertCircle,
   Sparkles,
-  Info,
   Server,
   HelpCircle,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { useAuth } from '@/context/AuthContext'
 import { apiClient } from '@/api/client'
 import { DEMO_ACCOUNTS, type DemoAccount } from '@/api/authApi'
@@ -33,6 +32,11 @@ interface LoginPageProps {
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onBackToLanding, onSwitchToRegister }) => {
   const { login, isLoading, error, clearError } = useAuth()
+
+  const onSuccessRef = React.useRef(onSuccess)
+  useEffect(() => {
+    onSuccessRef.current = onSuccess
+  }, [onSuccess])
 
   const [username, setUsername] = useState('sv_20210001')
   const [password, setPassword] = useState('123456')
@@ -63,7 +67,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onBackToLanding
       await login({ username: username.trim(), password }, rememberMe)
       setLoginSuccessNotice(true)
       setTimeout(() => {
-        onSuccess()
+        onSuccessRef.current?.()
       }, 600)
     } catch {
       // Error handled by AuthContext
@@ -142,9 +146,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onBackToLanding
                   <span className="font-black text-xl tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-sky-600 via-blue-600 to-cyan-600 dark:from-sky-400 dark:to-cyan-300">
                     CNPM • QLHT
                   </span>
-                  <Badge variant="outline" className="text-[10px] font-bold text-sky-700 dark:text-sky-300 bg-sky-50 dark:bg-sky-950/60 border-sky-300 dark:border-sky-800">
-                    Weamis
-                  </Badge>
                 </div>
                 <p className="text-[11px] text-muted-foreground font-medium">Hệ Thống Quản Lý Học Tập Thông Minh</p>
               </div>
@@ -372,13 +373,6 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onBackToLanding
               </div>
             </div>
           </CardContent>
-
-          <CardFooter className="py-3 px-6 bg-muted/30 border-t border-border/40 flex items-center justify-center text-center">
-            <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
-              <Info className="h-3.5 w-3.5 text-sky-500 shrink-0" />
-              <span>Hệ thống bảo vệ bằng JWT Refresh Token Rotation & Phân quyền RBAC</span>
-            </p>
-          </CardFooter>
         </Card>
       </div>
 
