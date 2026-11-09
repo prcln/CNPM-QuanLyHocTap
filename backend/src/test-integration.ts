@@ -135,10 +135,22 @@ async function runIntegrationTests() {
 
     // 8. Assignments & Groups
     console.log("\n--- 8. Module Bài Tập & Nhóm ---");
+    const allAssignmentsRes = await fetch(`${baseUrl}/api/v1/assignments`).then((r) => r.json());
+    assert(
+      allAssignmentsRes.code === 200 && Array.isArray(allAssignmentsRes.data) && allAssignmentsRes.data.length > 0,
+      "GET /assignments trả về danh sách tất cả bài tập"
+    );
+
     const assignRes = await fetch(`${baseUrl}/api/v1/classes/1/assignments`).then((r) => r.json());
     assert(
       assignRes.code === 200 && Array.isArray(assignRes.data),
       "GET /classes/:malh/assignments trả về danh sách bài tập"
+    );
+
+    const singleAssignRes = await fetch(`${baseUrl}/api/v1/assignments/1`).then((r) => r.json());
+    assert(
+      singleAssignRes.code === 200 && singleAssignRes.data?.mabt === 1,
+      "GET /assignments/:mabt trả về chi tiết bài tập"
     );
 
     const groupsRes = await fetch(`${baseUrl}/api/v1/assignments/1/groups`).then((r) => r.json());
@@ -147,8 +159,50 @@ async function runIntegrationTests() {
       "GET /assignments/:mabt/groups trả về danh sách nhóm bài tập"
     );
 
-    // 9. Not Found Middleware (404)
-    console.log("\n--- 9. Not Found Middleware ---");
+    const toggleAssignRes = await fetch(`${baseUrl}/api/v1/assignments/1/toggle-status`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((r) => r.json());
+    assert(
+      toggleAssignRes.code === 200 && toggleAssignRes.data?.status !== undefined,
+      "PATCH /assignments/:mabt/toggle-status cập nhật trạng thái bài tập thành công"
+    );
+
+    // 9. Module Thống kê & Hoạt động Ngoại Khóa & DRL
+    console.log("\n--- 9. Thống Kê Sinh Viên, Hoạt Động Ngoại Khóa & DRL ---");
+    const statsRes = await fetch(`${baseUrl}/api/v1/students/me/stats`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((r) => r.json());
+    assert(
+      statsRes.code === 200 && statsRes.data?.totalCourses !== undefined && statsRes.data?.overallGpa4 !== undefined,
+      "GET /students/me/stats tính toán tổng quan học tập chuẩn xác"
+    );
+
+    const activitiesRes = await fetch(`${baseUrl}/api/v1/activities`).then((r) => r.json());
+    assert(
+      activitiesRes.code === 200 && Array.isArray(activitiesRes.data) && activitiesRes.data.length > 0,
+      "GET /activities trả về danh sách hoạt động ngoại khóa"
+    );
+
+    const toggleActRes = await fetch(`${baseUrl}/api/v1/activities/act-1/toggle`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((r) => r.json());
+    assert(
+      toggleActRes.code === 200 && toggleActRes.data?.registered !== undefined,
+      "POST /activities/:id/toggle toggle đăng ký hoạt động ngoại khóa"
+    );
+
+    const drlRes = await fetch(`${baseUrl}/api/v1/activities/drl-summary`, {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((r) => r.json());
+    assert(
+      drlRes.code === 200 && drlRes.data?.totalDrl > 0 && Array.isArray(drlRes.data?.criteriaBreakdown),
+      "GET /activities/drl-summary trả về tổng hợp điểm rèn luyện HUST"
+    );
+
+    // 10. Not Found Middleware (404)
+    console.log("\n--- 10. Not Found Middleware ---");
     const nfRes = await fetch(`${baseUrl}/api/v1/this-endpoint-does-not-exist`);
     const nfJson = await nfRes.json();
     assert(

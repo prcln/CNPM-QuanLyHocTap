@@ -1,8 +1,9 @@
-import { mockDb, sleep, getSimulatedLatency, setSimulatedLatency } from './mockDb'
+import { getMockDb, sleep, getSimulatedLatency, setSimulatedLatency } from './mockProvider'
 import { apiClient } from './client'
 import {
   adaptCoursesListResponse,
   adaptCourseRawToViewModel,
+  adaptViewModelToCoursePayload,
   adaptGradesListResponse,
   adaptGradeRawToViewModel,
   adaptViewModelToGradePayload,
@@ -28,7 +29,7 @@ export const studentApi = {
   setLatency: (ms: number): void => setSimulatedLatency(ms),
   resetDatabase: async (): Promise<void> => {
     await sleep()
-    mockDb.resetAll()
+    getMockDb().resetAll()
   },
 
   // Courses basic CRUD API (Compatible with API Contract /courses)
@@ -44,7 +45,7 @@ export const studentApi = {
         return adaptCoursesListResponse(res)
       }
       await sleep()
-      return mockDb.getCourses(filters)
+      return getMockDb().getCourses(filters)
     },
 
     getById: async (id: string): Promise<Course> => {
@@ -55,7 +56,7 @@ export const studentApi = {
         throw new Error(`Không tìm thấy môn học có ID: ${id}`)
       }
       await sleep()
-      const course = mockDb.getCourseById(id)
+      const course = getMockDb().getCourseById(id)
       if (!course) {
         throw new Error(`Không tìm thấy môn học có ID: ${id}`)
       }
@@ -64,16 +65,17 @@ export const studentApi = {
 
     create: async (data: Omit<Course, 'id' | 'createdAt' | 'updatedAt'>): Promise<Course> => {
       if (apiClient.getMode() === 'backend') {
+        const payload = adaptViewModelToCoursePayload(data)
         const res = await apiClient.request<{ data: unknown } | unknown>('/courses', {
           method: 'POST',
-          body: JSON.stringify(data),
+          body: JSON.stringify(payload),
         })
         const raw = res && typeof res === 'object' && 'data' in res ? (res as { data: unknown }).data : res
         if (raw) return adaptCourseRawToViewModel(raw as any)
         throw new Error('Tạo học phần mới thất bại')
       }
       await sleep()
-      return mockDb.createCourse(data)
+      return getMockDb().createCourse(data)
     },
 
     update: async (
@@ -81,16 +83,17 @@ export const studentApi = {
       updates: Partial<Omit<Course, 'id' | 'createdAt'>>,
     ): Promise<Course> => {
       if (apiClient.getMode() === 'backend') {
+        const payload = adaptViewModelToCoursePayload(updates)
         const res = await apiClient.request<{ data: unknown } | unknown>(`/courses/${id}`, {
           method: 'PUT',
-          body: JSON.stringify(updates),
+          body: JSON.stringify(payload),
         })
         const raw = res && typeof res === 'object' && 'data' in res ? (res as { data: unknown }).data : res
         if (raw) return adaptCourseRawToViewModel(raw as any)
         throw new Error(`Cập nhật môn học ${id} thất bại`)
       }
       await sleep()
-      return mockDb.updateCourse(id, updates)
+      return getMockDb().updateCourse(id, updates)
     },
 
     delete: async (id: string): Promise<{ success: boolean; id: string }> => {
@@ -99,7 +102,7 @@ export const studentApi = {
         return { success: true, id }
       }
       await sleep()
-      const success = mockDb.deleteCourse(id)
+      const success = getMockDb().deleteCourse(id)
       if (!success) {
         throw new Error(`Xóa môn học thất bại hoặc môn học không tồn tại`)
       }
@@ -111,11 +114,15 @@ export const studentApi = {
   assignments: {
     getAll: async (filters?: AssignmentFilters): Promise<Assignment[]> => {
       if (apiClient.getMode() === 'backend') {
-        const res = await apiClient.request<unknown>('/assignments')
+        const params = new URLSearchParams()
+        if (filters?.courseId && filters.courseId !== 'all') params.append('malh', filters.courseId)
+        if (filters?.search) params.append('search', filters.search)
+        const qs = params.toString() ? `?${params.toString()}` : ''
+        const res = await apiClient.request<unknown>(`/assignments${qs}`)
         return adaptAssignmentsListResponse(res)
       }
       await sleep()
-      return mockDb.getAssignments(filters)
+      return getMockDb().getAssignments(filters)
     },
 
     create: async (data: Omit<Assignment, 'id' | 'createdAt'>): Promise<Assignment> => {
@@ -130,7 +137,7 @@ export const studentApi = {
         throw new Error('Tạo bài tập thất bại')
       }
       await sleep()
-      return mockDb.createAssignment(data)
+      return getMockDb().createAssignment(data)
     },
 
     update: async (
@@ -148,12 +155,20 @@ export const studentApi = {
         throw new Error(`Cập nhật bài tập ${id} thất bại`)
       }
       await sleep()
-      return mockDb.updateAssignment(id, updates)
+      return getMockDb().updateAssignment(id, updates)
     },
 
     toggleStatus: async (id: string): Promise<Assignment> => {
+      if (apiClient.getMode() === 'backend') {
+        const res = await apiClient.request<{ data: unknown } | unknown>(`/assignments/${id}/toggle-status`, {
+          method: 'PATCH',
+        })
+        const raw = res && typeof res === 'object' && 'data' in res ? (res as { data: unknown }).data : res
+        if (raw) return adaptAssignmentRawToViewModel(raw as any)
+        throw new Error(`Đổi trạng thái bài tập ${id} thất bại`)
+      }
       await sleep()
-      return mockDb.toggleAssignmentStatus(id)
+      return getMockDb().toggleAssignmentStatus(id)
     },
 
     delete: async (id: string): Promise<{ success: boolean; id: string }> => {
@@ -162,7 +177,7 @@ export const studentApi = {
         return { success: true, id }
       }
       await sleep()
-      const success = mockDb.deleteAssignment(id)
+      const success = getMockDb().deleteAssignment(id)
       if (!success) {
         throw new Error(`Xóa bài tập thất bại hoặc bài tập không tồn tại`)
       }
@@ -178,7 +193,7 @@ export const studentApi = {
         return adaptGradesListResponse(res)
       }
       await sleep()
-      return mockDb.getGrades()
+      return getMockDb().getGrades()
     },
 
     update: async (
@@ -194,7 +209,8 @@ export const studentApi = {
     ): Promise<GradeRecord> => {
       if (apiClient.getMode() === 'backend') {
         const payload = adaptViewModelToGradePayload(scores)
-        const res = await apiClient.request<{ data: unknown } | unknown>(`/classes/${id}/grades`, {
+        const malh = Number(id.replace(/^g-/, '').replace(/^c-/, '')) || 1
+        const res = await apiClient.request<{ data: unknown } | unknown>(`/students/me/grades/${malh}`, {
           method: 'PUT',
           body: JSON.stringify(payload),
         })
@@ -203,7 +219,7 @@ export const studentApi = {
         throw new Error(`Cập nhật điểm cho lớp ${id} thất bại`)
       }
       await sleep()
-      return mockDb.updateGrade(id, scores)
+      return getMockDb().updateGrade(id, scores)
     },
   },
 
@@ -211,29 +227,26 @@ export const studentApi = {
   stats: {
     getOverview: async (): Promise<StudyStats> => {
       if (apiClient.getMode() === 'backend') {
-        try {
-          const res = await apiClient.request<{ data: any } | any>('/students/me/gpa')
-          const raw = res && typeof res === 'object' && 'data' in res ? res.data : res
-          if (raw) {
-            return {
-              totalCourses: 5,
-              activeCourses: 4,
-              totalCredits: Number(raw.totalCredits) || 85,
-              completedCredits: Number(raw.passedCredits) || 80,
-              overallGpa10: Number(raw.gpa10) || 3.45,
-              overallGpa4: Number(raw.gpa4) || 3.5,
-              totalAssignments: 8,
-              pendingAssignments: 3,
-              completedAssignments: 5,
-              urgentDeadlinesCount: 1,
-            }
+        const res = await apiClient.request<{ data: any } | any>('/students/me/stats')
+        const raw = res && typeof res === 'object' && 'data' in res ? res.data : res
+        if (raw) {
+          return {
+            totalCourses: Number(raw.totalCourses) || 0,
+            activeCourses: Number(raw.activeCourses) || 0,
+            totalCredits: Number(raw.totalCredits) || 0,
+            completedCredits: Number(raw.completedCredits) || 0,
+            overallGpa10: Number(raw.overallGpa10) || 0,
+            overallGpa4: Number(raw.overallGpa4) || 0,
+            totalAssignments: Number(raw.totalAssignments) || 0,
+            pendingAssignments: Number(raw.pendingAssignments) || 0,
+            completedAssignments: Number(raw.completedAssignments) || 0,
+            urgentDeadlinesCount: Number(raw.urgentDeadlinesCount) || 0,
           }
-        } catch {
-          // If stats endpoint not ready, return standard overview
         }
+        throw new Error('Không thể lấy dữ liệu thống kê từ máy chủ')
       }
       await sleep()
-      return mockDb.getStats()
+      return getMockDb().getStats()
     },
   },
 
@@ -243,18 +256,39 @@ export const studentApi = {
       category?: ActivityCategory | 'all',
       registeredOnly?: boolean,
     ): Promise<ExtracurricularActivity[]> => {
+      if (apiClient.getMode() === 'backend') {
+        const params = new URLSearchParams()
+        if (category && category !== 'all') params.append('category', category)
+        if (registeredOnly) params.append('registeredOnly', 'true')
+        const qs = params.toString() ? `?${params.toString()}` : ''
+        const res = await apiClient.request<{ data: any[] } | any[]>(`/activities${qs}`)
+        const items = Array.isArray(res) ? res : res && typeof res === 'object' && 'data' in res ? res.data : []
+        return items as ExtracurricularActivity[]
+      }
       await sleep()
-      return mockDb.getActivities(category, registeredOnly)
+      return getMockDb().getActivities(category, registeredOnly)
     },
 
     toggleRegister: async (id: string): Promise<ExtracurricularActivity> => {
+      if (apiClient.getMode() === 'backend') {
+        const res = await apiClient.request<{ data: any } | any>(`/activities/${id}/toggle`, {
+          method: 'POST',
+        })
+        const raw = res && typeof res === 'object' && 'data' in res ? res.data : res
+        return raw as ExtracurricularActivity
+      }
       await sleep()
-      return mockDb.toggleActivityRegistration(id)
+      return getMockDb().toggleActivityRegistration(id)
     },
 
     getDrlSummary: async (): Promise<DrlSummary> => {
+      if (apiClient.getMode() === 'backend') {
+        const res = await apiClient.request<{ data: any } | any>('/activities/drl-summary')
+        const raw = res && typeof res === 'object' && 'data' in res ? res.data : res
+        return raw as DrlSummary
+      }
       await sleep()
-      return mockDb.getDrlSummary()
+      return getMockDb().getDrlSummary()
     },
   },
 }

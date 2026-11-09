@@ -10,6 +10,7 @@ import {
   Edit2,
   GraduationCap,
   RefreshCw,
+  Award,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
@@ -17,8 +18,11 @@ import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { LoadingState, ErrorState, EmptyState, useToast, useConfirm } from '@/components/shared'
 import { useCourses, useCreateCourse, useUpdateCourse, useDeleteCourse } from '@/hooks/useCourses'
+import { useGrades } from '@/hooks/useGrades'
 import { CourseModal } from './CourseModal'
-import type { Course, CourseStatus } from '@/types/student'
+import { CourseGradeDetailModal } from './CourseGradeDetailModal'
+import type { Course, CourseStatus, GradeRecord } from '@/types/student'
+import type { PortalTab } from '@/components/portal/Sidebar'
 
 const DAY_LABELS: Record<string, string> = {
   Monday: 'Thứ 2',
@@ -30,22 +34,59 @@ const DAY_LABELS: Record<string, string> = {
   Sunday: 'Chủ Nhật',
 }
 
-export function CourseList() {
+interface CourseListProps {
+  onNavigateTab?: (tab: PortalTab) => void
+}
+
+export function CourseList({ onNavigateTab }: CourseListProps = {}) {
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState<CourseStatus | 'all'>('all')
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingCourse, setEditingCourse] = useState<Course | null>(null)
+
+  // State cho Modal Xem & Nhập Điểm Chi Tiết
+  const [selectedCourseForDetail, setSelectedCourseForDetail] = useState<Course | null>(null)
+  const [selectedGradeForDetail, setSelectedGradeForDetail] = useState<GradeRecord | null>(null)
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false)
 
   const { data: courses, isLoading, isFetching, error, refetch } = useCourses({
     search: searchTerm,
     status: statusFilter,
   })
 
+  const { data: grades } = useGrades()
+
   const createMutation = useCreateCourse()
   const updateMutation = useUpdateCourse()
   const deleteMutation = useDeleteCourse()
   const { toast } = useToast()
   const confirm = useConfirm()
+
+  // Match grade record với course
+  const findGradeForCourse = (course: Course): GradeRecord | undefined => {
+    if (!grades) return undefined
+    const cCode = course.code.trim().toUpperCase()
+    const cId = course.id.trim().toUpperCase()
+    return grades.find((g) => {
+      const gCourseId = (g.courseId || '').trim().toUpperCase()
+      const gCourseCode = ((g as { courseCode?: string }).courseCode || '').trim().toUpperCase()
+      const gId = (g.id || '').trim().toUpperCase()
+      return (
+        gCourseId === cId ||
+        gCourseCode === cCode ||
+        gCourseId === cCode ||
+        gCourseCode === cId ||
+        gId === `G-${cId}` ||
+        gId === `G-${cCode}`
+      )
+    })
+  }
+
+  const handleOpenDetail = (course: Course, grade?: GradeRecord) => {
+    setSelectedCourseForDetail(course)
+    setSelectedGradeForDetail(grade || null)
+    setIsDetailModalOpen(true)
+  }
 
   const handleOpenAdd = () => {
     setEditingCourse(null)
@@ -176,6 +217,7 @@ export function CourseList() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {courses?.map((course) => {
             const isDeleting = deleteMutation.isPending && deleteMutation.variables === course.id
+            const grade = findGradeForCourse(course)
 
             return (
               <Card
@@ -189,7 +231,7 @@ export function CourseList() {
               >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-1.5">
                       <Badge variant="outline" className="font-mono font-semibold text-xs">
                         {course.code}
                       </Badge>
@@ -209,6 +251,37 @@ export function CourseList() {
                           ? 'Sắp mở'
                           : 'Đã hoàn thành'}
                       </Badge>
+
+                      {/* Huy hiệu điểm học phần trực tiếp trên Course Card */}
+                      {grade && grade.overallScore > 0 ? (
+                        <Badge
+                          variant="secondary"
+                          onClick={() => handleOpenDetail(course, grade)}
+                          className={`cursor-pointer font-semibold text-xs gap-1 transition-all hover:scale-105 border ${
+                            grade.overallScore < 4.0 || grade.finalExamScore < 3.0
+                              ? 'bg-rose-50 text-rose-700 border-rose-300 dark:bg-rose-950/40 dark:text-rose-300'
+                              : grade.overallScore >= 8.5
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-300 dark:bg-emerald-950/40 dark:text-emerald-300'
+                              : grade.overallScore >= 7.0
+                              ? 'bg-blue-50 text-blue-700 border-blue-300 dark:bg-blue-950/40 dark:text-blue-300'
+                              : 'bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300'
+                          }`}
+                          title="Nhấn để xem chi tiết bảng điểm & chỉnh sửa"
+                        >
+                          <Award className="h-3 w-3" />
+                          <span>{grade.letterGrade} ({grade.overallScore.toFixed(1)})</span>
+                        </Badge>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenDetail(course, grade)}
+                          className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-primary transition-colors cursor-pointer bg-muted/60 px-2 py-0.5 rounded-full hover:bg-muted"
+                          title="Nhấn để nhập điểm cho học phần này"
+                        >
+                          <Award className="h-3 w-3 text-muted-foreground" />
+                          <span>Nhập điểm</span>
+                        </button>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1 opacity-80 group-hover:opacity-100 transition-opacity">
@@ -248,6 +321,42 @@ export function CourseList() {
                     </p>
                   )}
 
+                  {/* Bảng điểm thành phần tóm tắt trực quan */}
+                  {grade && (grade.attendanceScore > 0 || grade.midtermScore > 0 || (grade.practicalScore ?? 0) > 0 || grade.finalExamScore > 0 || grade.overallScore > 0) && (
+                    <div
+                      onClick={() => handleOpenDetail(course, grade)}
+                      className="p-2.5 rounded-lg bg-muted/40 hover:bg-muted/70 transition-all cursor-pointer border border-border/60 space-y-1.5 group/grade"
+                      title="Bấm để xem và sửa điểm thành phần"
+                    >
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-semibold text-foreground/80 flex items-center gap-1">
+                          <Award className="h-3.5 w-3.5 text-primary" /> Điểm thành phần:
+                        </span>
+                        <span className="font-semibold text-foreground">
+                          GPA: <span className="text-primary font-bold">{grade.gpaScore?.toFixed(2) || '0.00'}</span> / 4.0
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-4 gap-1 text-center font-mono text-[11px]">
+                        <div className="bg-background/80 py-1 px-0.5 rounded border border-border/40 shadow-2xs">
+                          <div className="text-[10px] text-muted-foreground font-sans">CC (10%)</div>
+                          <div className="font-semibold">{grade.attendanceScore > 0 ? grade.attendanceScore : '-'}</div>
+                        </div>
+                        <div className="bg-background/80 py-1 px-0.5 rounded border border-border/40 shadow-2xs">
+                          <div className="text-[10px] text-muted-foreground font-sans">GK (30%)</div>
+                          <div className="font-semibold">{grade.midtermScore > 0 ? grade.midtermScore : '-'}</div>
+                        </div>
+                        <div className="bg-background/80 py-1 px-0.5 rounded border border-border/40 shadow-2xs">
+                          <div className="text-[10px] text-muted-foreground font-sans">TH/BT</div>
+                          <div className="font-semibold">{(grade.practicalScore ?? 0) > 0 ? grade.practicalScore : '-'}</div>
+                        </div>
+                        <div className="bg-background/80 py-1 px-0.5 rounded border border-border/40 shadow-2xs">
+                          <div className="text-[10px] text-muted-foreground font-sans">CK (50%)</div>
+                          <div className="font-semibold">{grade.finalExamScore > 0 ? grade.finalExamScore : '-'}</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="grid grid-cols-2 gap-2 pt-2 border-t text-xs">
                     <div className="flex items-center gap-1.5">
                       <Calendar className="h-3.5 w-3.5 text-primary" />
@@ -270,9 +379,15 @@ export function CourseList() {
 
                 <CardFooter className="pt-2 border-t flex items-center justify-between text-xs text-muted-foreground bg-muted/20 rounded-b-xl">
                   <span>Học kỳ: {course.semester}</span>
-                  <span className="font-medium text-primary flex items-center gap-1">
-                    <BookOpen className="h-3.5 w-3.5" /> Chi tiết
-                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleOpenDetail(course, grade)}
+                    className="h-7 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10 gap-1.5 px-2"
+                  >
+                    <BookOpen className="h-3.5 w-3.5" />
+                    <span>Chi tiết & Điểm</span>
+                  </Button>
                 </CardFooter>
               </Card>
             )
@@ -297,6 +412,20 @@ export function CourseList() {
         onSubmit={handleFormSubmit}
         initialData={editingCourse}
         isSubmitting={createMutation.isPending || updateMutation.isPending}
+      />
+
+      {/* Course Grade Detail & Input Modal */}
+      <CourseGradeDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        course={selectedCourseForDetail}
+        grade={selectedGradeForDetail}
+        onNavigateToGrades={() => {
+          setIsDetailModalOpen(false)
+          if (onNavigateTab) {
+            onNavigateTab('grades')
+          }
+        }}
       />
     </div>
   )

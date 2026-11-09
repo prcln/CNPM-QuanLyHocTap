@@ -213,7 +213,7 @@ export default function App() {
               {activeTab === 'overview' && (
                 <OverviewDashboard onNavigateTab={handleSelectTab} />
               )}
-              {activeTab === 'courses' && <CourseList />}
+              {activeTab === 'courses' && <CourseList onNavigateTab={handleSelectTab} />}
               {activeTab === 'assignments' && <AssignmentList />}
               {activeTab === 'grades' && <GradeTracker />}
               {activeTab === 'schedule' && (

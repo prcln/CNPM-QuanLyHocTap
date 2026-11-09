@@ -87,8 +87,10 @@ Mỗi module tương ứng với từng Table trong [ERD](./ERD.png)
 | PUT    | `/students/me`               | SV    | Cập nhật thông tin được phép sửa |
 | GET    | `/students/me/grades`        | SV    | Xem toàn bộ điểm                 |
 | GET    | `/students/me/grades/{malh}` | SV    | Xem điểm một lớp                 |
+| PUT    | `/students/me/grades/{malh}` | SV    | Cập nhật điểm một lớp (tự tính tổng kết, chữ, hệ 4) |
 | GET    | `/students/me/gpa`           | SV    | GPA theo học kỳ                  |
 | GET    | `/students/me/cpa`           | SV    | CPA hiện tại                     |
+| GET    | `/students/me/stats`         | SV    | Thống kê tổng quan học tập sinh viên |
 | GET    | `/students/me/schedule`      | SV    | Thời khóa biểu                   |
 | GET    | `/students/me/classes`       | SV    | Các lớp đang tham gia            |
 | GET    | `/students`                  | GV/AD | Danh sách sinh viên              |
@@ -149,6 +151,7 @@ Mỗi module tương ứng với từng Table trong [ERD](./ERD.png)
 | Method | Endpoint                        | Role  | Description               |
 | ------ | ------------------------------- | ----- | ------------------------- |
 | GET    | `/students/me/grades`           | SV    | Điểm của bản thân         |
+| PUT    | `/students/me/grades/{malh}`    | SV    | Cập nhật điểm của bản thân theo lớp (HUST) |
 | GET    | `/students/{masv}/grades`       | GV/AD | Điểm của sinh viên        |
 | GET    | `/classes/{malh}/grades`        | GV/AD | Bảng điểm của lớp         |
 | GET    | `/classes/{malh}/grades/{masv}` | GV/AD | Điểm của một SV trong lớp |
@@ -173,14 +176,17 @@ Mỗi module tương ứng với từng Table trong [ERD](./ERD.png)
 
 ### 8. Module bài tập và chia nhóm
 
-| Method | Endpoint                          | Role     | Description       |
-| ------ | --------------------------------- | -------- | ----------------- |
-| GET    | `/classes/{malh}/assignments`     | SV/GV/AD | Danh sách bài tập |
-| GET    | `/assignments/{mabt}`             | SV/GV/AD | Chi tiết bài tập  |
-| POST   | `/classes/{malh}/assignments`     | GV/AD    | Tạo bài tập       |
-| PUT    | `/assignments/{mabt}`             | GV/AD    | Cập nhật bài tập  |
-| DELETE | `/assignments/{mabt}`             | GV/AD    | Xóa bài tập       |
-| GET    | `/assignments/{mabt}/groups`      | SV/GV/AD | Danh sách nhóm    |
+| Method | Endpoint                          | Role     | Description                                           |
+| ------ | --------------------------------- | -------- | ----------------------------------------------------- |
+| GET    | `/assignments`                    | SV/GV/AD | Danh sách tất cả bài tập (hỗ trợ filter malh, search) |
+| POST   | `/assignments`                    | SV/GV/AD | Tạo bài tập trực tiếp (kèm malh trong body)           |
+| GET    | `/classes/{malh}/assignments`     | SV/GV/AD | Danh sách bài tập theo lớp                            |
+| GET    | `/assignments/{mabt}`             | SV/GV/AD | Chi tiết bài tập                                      |
+| POST   | `/classes/{malh}/assignments`     | GV/AD    | Tạo bài tập theo lớp                                  |
+| PUT    | `/assignments/{mabt}`             | SV/GV/AD | Cập nhật bài tập                                      |
+| PATCH  | `/assignments/{mabt}/toggle-status` | SV/GV/AD | Đảo trạng thái hoàn thành bài tập (completed / pending) |
+| DELETE | `/assignments/{mabt}`             | SV/GV/AD | Xóa bài tập                                           |
+| GET    | `/assignments/{mabt}/groups`      | SV/GV/AD | Danh sách nhóm                                        |
 | GET    | `/groups/{manhom}`                | SV/GV/AD | Chi tiết nhóm     |
 | POST   | `/assignments/{mabt}/groups`      | SV/GV/AD | Tạo nhóm          |
 | PUT    | `/groups/{manhom}`                | SV/GV/AD | Cập nhật nhóm     |
@@ -188,5 +194,14 @@ Mỗi module tương ứng với từng Table trong [ERD](./ERD.png)
 | GET    | `/groups/{manhom}/members`        | SV/GV/AD | Thành viên nhóm   |
 | POST   | `/groups/{manhom}/members/{masv}` | SV/GV/AD | Thêm SV vào nhóm  |
 | DELETE | `/groups/{manhom}/members/{masv}` | SV/GV/AD | Xóa SV khỏi nhóm  |
+
+
+### 9. Module hoạt động ngoại khóa & điểm rèn luyện (DRL)
+
+| Method | Endpoint                    | Role     | Description                                           |
+| ------ | --------------------------- | -------- | ----------------------------------------------------- |
+| GET    | `/activities`               | SV/GV/AD | Danh sách hoạt động ngoại khóa (filter category, reg) |
+| POST   | `/activities/{id}/toggle`   | SV       | Đăng ký / Hủy đăng ký tham gia hoạt động              |
+| GET    | `/activities/drl-summary`   | SV       | Bảng tổng hợp điểm rèn luyện và 5 tiêu chí HUST       |
 
 

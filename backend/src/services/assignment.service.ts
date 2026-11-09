@@ -1,6 +1,10 @@
 import { assignmentRepository } from "../repositories/assignment.repository.js";
 
 export class AssignmentService {
+  async getAllAssignments(filters?: { malh?: number; search?: string }) {
+    return assignmentRepository.getAll(filters);
+  }
+
   async getAssignmentsByClass(malh: number) {
     return assignmentRepository.getAssignmentsByClass(malh);
   }
@@ -19,6 +23,10 @@ export class AssignmentService {
 
   async deleteAssignment(mabt: number) {
     return assignmentRepository.delete(mabt);
+  }
+
+  async toggleStatus(mabt: number) {
+    return assignmentRepository.toggleStatus(mabt);
   }
 
   async getGroups(mabt: number) {

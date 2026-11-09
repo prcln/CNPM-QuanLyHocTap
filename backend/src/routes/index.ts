@@ -8,6 +8,7 @@ import classRoutes from "./class.routes.js";
 import scheduleRoutes from "./schedule.routes.js";
 import assignmentRoutes from "./assignment.routes.js";
 import groupRoutes from "./group.routes.js";
+import activityRoutes from "./activity.routes.js";
 
 const apiV1Router = Router();
 
@@ -34,5 +35,8 @@ apiV1Router.use("/schedule", scheduleRoutes); // alias theo API Contract
 // 7. Module Bài tập & Nhóm
 apiV1Router.use("/assignments", assignmentRoutes);
 apiV1Router.use("/groups", groupRoutes);
+
+// 8. Module Hoạt động ngoại khóa & DRL
+apiV1Router.use("/activities", activityRoutes);
 
 export default apiV1Router;

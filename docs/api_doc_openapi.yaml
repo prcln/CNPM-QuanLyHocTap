@@ -440,6 +440,56 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Grade'
+    put:
+      tags: [Grades]
+      summary: Cập nhật hoặc tạo mới điểm của sinh viên trong một lớp (tự động tính điểm tổng kết, chữ, thang 4 theo chuẩn HUST)
+      x-roles: [SV]
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/malh'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                diem_qt:
+                  type: number
+                  format: float
+                  example: 8.5
+                diem_thi:
+                  type: number
+                  format: float
+                  example: 8.0
+                attendanceScore:
+                  type: number
+                  format: float
+                  example: 10.0
+                midtermScore:
+                  type: number
+                  format: float
+                  example: 8.0
+                practicalScore:
+                  type: number
+                  format: float
+                  example: 8.5
+                finalExamScore:
+                  type: number
+                  format: float
+                  example: 8.0
+      responses:
+        '200':
+          description: Cập nhật điểm thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Grade'
+        '400':
+          description: Dữ liệu điểm không hợp lệ
+        '401':
+          description: Chưa đăng nhập
 
   /students/{masv}/grades:
     get:
@@ -496,6 +546,42 @@ paths:
                     type: number
                     format: double
                     nullable: true
+
+  /students/me/stats:
+    get:
+      tags: [Students]
+      summary: Thống kê tổng quan học tập sinh viên
+      x-roles: [SV]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Thống kê học tập
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalCourses:
+                    type: integer
+                  activeCourses:
+                    type: integer
+                  totalCredits:
+                    type: integer
+                  completedCredits:
+                    type: integer
+                  overallGpa10:
+                    type: number
+                  overallGpa4:
+                    type: number
+                  totalAssignments:
+                    type: integer
+                  pendingAssignments:
+                    type: integer
+                  completedAssignments:
+                    type: integer
+                  urgentDeadlinesCount:
+                    type: integer
 
   /students/me/schedule:
     get:
@@ -1182,6 +1268,55 @@ paths:
   # ASSIGNMENTS
   # ============================================================
 
+  /assignments:
+    get:
+      tags: [Assignments]
+      summary: Danh sách tất cả bài tập
+      description: Hỗ trợ tìm kiếm theo từ khóa và lọc theo mã lớp học
+      x-roles: [SV, GV, AD]
+      parameters:
+        - name: malh
+          in: query
+          required: false
+          schema:
+            type: integer
+          description: Lọc bài tập theo mã lớp học
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Từ khóa tìm kiếm bài tập (tiêu đề, nội dung)
+      responses:
+        '200':
+          description: Danh sách bài tập
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Assignment'
+
+    post:
+      tags: [Assignments]
+      summary: Tạo bài tập mới
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignmentCreate'
+      responses:
+        '201':
+          description: Tạo bài tập thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Assignment'
+
   /classes/{malh}/assignments:
     get:
       tags: [Assignments]
@@ -1274,6 +1409,67 @@ paths:
       responses:
         '204':
           description: Xóa thành công
+
+  /assignments/{mabt}/toggle-status:
+    patch:
+      tags: [Assignments]
+      summary: Đảo trạng thái hoàn thành bài tập (completed/pending)
+      x-roles: [SV, GV, AD]
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: mabt
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Cập nhật trạng thái thành công
+
+  # ============================================================
+  # ACTIVITIES & DRL
+  # ============================================================
+
+  /activities:
+    get:
+      tags: [Activities]
+      summary: Danh sách hoạt động ngoại khóa
+      responses:
+        '200':
+          description: Danh sách hoạt động
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+
+  /activities/{id}/toggle:
+    post:
+      tags: [Activities]
+      summary: Đăng ký hoặc hủy đăng ký tham gia hoạt động
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Cập nhật đăng ký thành công
+
+  /activities/drl-summary:
+    get:
+      tags: [Activities]
+      summary: Bảng tổng hợp điểm rèn luyện và tiêu chí đánh giá HUST
+      responses:
+        '200':
+          description: DRL Summary
+          content:
+            application/json:
+              schema:
+                type: object
 
   # ============================================================
   # GROUPS

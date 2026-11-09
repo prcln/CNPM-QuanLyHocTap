@@ -69,12 +69,18 @@ export const db = new Proxy(realDb, {
         }
 
         const queryObj = orig.apply(target, args);
-        // Intercept promise chain if it's thenable
-        if (queryObj && typeof queryObj.then === "function") {
-          return queryObj.catch((err: any) => {
-            recordDbFailure();
-            throw err;
-          });
+        // Intercept execution only when actually awaited
+        if (queryObj && typeof queryObj === "object" && typeof queryObj.then === "function") {
+          const originalThen = queryObj.then.bind(queryObj);
+          queryObj.then = function (onFulfilled?: any, onRejected?: any) {
+            return originalThen(onFulfilled, (err: any) => {
+              recordDbFailure();
+              if (onRejected) {
+                return onRejected(err);
+              }
+              throw err;
+            });
+          };
         }
         return queryObj;
       };

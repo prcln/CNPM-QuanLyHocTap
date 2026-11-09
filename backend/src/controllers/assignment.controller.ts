@@ -3,6 +3,17 @@ import { assignmentService } from "../services/assignment.service.js";
 import { sendSuccess, sendError } from "../utils/response.utils.js";
 
 export class AssignmentController {
+  async getAllAssignments(req: Request, res: Response): Promise<void> {
+    try {
+      const malh = req.query.malh ? Number(req.query.malh) : undefined;
+      const search = req.query.search ? String(req.query.search) : undefined;
+      const data = await assignmentService.getAllAssignments({ malh, search });
+      sendSuccess(res, data, "Lấy danh sách bài tập thành công");
+    } catch (err: any) {
+      sendError(res, 500, err.message, err.details);
+    }
+  }
+
   async getAssignmentsByClass(req: Request, res: Response): Promise<void> {
     try {
       const malh = Number(req.params.malh);
@@ -29,12 +40,12 @@ export class AssignmentController {
 
   async createAssignment(req: Request, res: Response): Promise<void> {
     try {
-      const malh = Number(req.params.malh || req.body.malh);
-      const { loai, noi_dung, noiDung, deadline, due_date, dueDate } = req.body;
+      const malh = Number(req.params.malh || req.body.malh || req.body.courseId || 1);
+      const { loai, noi_dung, noiDung, deadline, due_date, dueDate, title, tieu_de, description, mo_ta } = req.body;
       const data = await assignmentService.createAssignment({
         malh,
-        loai: loai || req.body.title || "Bài tập lớn",
-        noiDung: noiDung || noi_dung || req.body.description,
+        loai: loai || title || tieu_de || "Bài tập lớn",
+        noiDung: noiDung || noi_dung || description || mo_ta || "",
         deadline: deadline || due_date || dueDate ? new Date(deadline || due_date || dueDate) : undefined,
       });
       sendSuccess(res, data, "Tạo bài tập thành công", 201);
@@ -46,7 +57,21 @@ export class AssignmentController {
   async updateAssignment(req: Request, res: Response): Promise<void> {
     try {
       const mabt = Number(req.params.mabt);
-      const data = await assignmentService.updateAssignment(mabt, req.body);
+      const { loai, noi_dung, noiDung, deadline, due_date, dueDate, title, tieu_de, description, mo_ta, malh, courseId } = req.body;
+      const updateData: any = {};
+      if (loai !== undefined || title !== undefined || tieu_de !== undefined) {
+        updateData.loai = loai || title || tieu_de;
+      }
+      if (noiDung !== undefined || noi_dung !== undefined || description !== undefined || mo_ta !== undefined) {
+        updateData.noiDung = noiDung || noi_dung || description || mo_ta;
+      }
+      if (deadline !== undefined || due_date !== undefined || dueDate !== undefined) {
+        updateData.deadline = deadline || due_date || dueDate ? new Date(deadline || due_date || dueDate) : null;
+      }
+      if (malh !== undefined || courseId !== undefined) {
+        updateData.malh = Number(malh || courseId);
+      }
+      const data = await assignmentService.updateAssignment(mabt, Object.keys(updateData).length > 0 ? updateData : req.body);
       if (!data) {
         sendError(res, 404, "Không tìm thấy bài tập");
         return;
@@ -62,6 +87,20 @@ export class AssignmentController {
       const mabt = Number(req.params.mabt);
       await assignmentService.deleteAssignment(mabt);
       sendSuccess(res, { mabt }, "Xóa bài tập thành công");
+    } catch (err: any) {
+      sendError(res, 500, err.message, err.details);
+    }
+  }
+
+  async toggleStatus(req: Request, res: Response): Promise<void> {
+    try {
+      const mabt = Number(req.params.mabt);
+      const data = await assignmentService.toggleStatus(mabt);
+      if (!data) {
+        sendError(res, 404, "Không tìm thấy bài tập");
+        return;
+      }
+      sendSuccess(res, data, "Cập nhật trạng thái bài tập thành công");
     } catch (err: any) {
       sendError(res, 500, err.message, err.details);
     }

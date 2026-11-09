@@ -12,6 +12,12 @@ export interface CourseData {
   phanBo?: string | null;
   noiDung?: string | null;
   deletedAt?: Date | null;
+  id?: string;
+  code?: string;
+  name?: string;
+  credits?: number;
+  instructor?: string;
+  description?: string;
 }
 
 let memoryCourses: CourseData[] = [
@@ -50,7 +56,16 @@ export class CourseRepository {
         .offset(offset);
 
       if (items.length > 0) {
-        return { items: items as CourseData[], total: Number(totalRec?.total || 0) };
+        const mapped = items.map((c) => ({
+          ...c,
+          id: c.mahp,
+          code: c.mahp,
+          name: c.ten,
+          instructor: c.truong || "Bộ môn phân công",
+          credits: c.tinChiDaoTao || 3,
+          description: c.noiDung || "",
+        }));
+        return { items: mapped as CourseData[], total: Number(totalRec?.total || 0) };
       }
     } catch {
       // Fallback
@@ -61,7 +76,16 @@ export class CourseRepository {
       const kw = filters.search.toLowerCase();
       list = list.filter((c) => c.mahp.toLowerCase().includes(kw) || c.ten.toLowerCase().includes(kw));
     }
-    return { items: list.slice(offset, offset + limit), total: list.length };
+    const mapped = list.map((c) => ({
+      ...c,
+      id: c.mahp,
+      code: c.mahp,
+      name: c.ten,
+      instructor: c.truong || "Bộ môn phân công",
+      credits: c.tinChiDaoTao || 3,
+      description: c.noiDung || "",
+    }));
+    return { items: mapped.slice(offset, offset + limit), total: list.length };
   }
 
   async findByMahp(mahp: string): Promise<CourseData | null> {
@@ -70,12 +94,31 @@ export class CourseRepository {
         .select()
         .from(hocPhan)
         .where(and(eq(hocPhan.mahp, mahp), isNull(hocPhan.deletedAt)));
-      if (res) return res as CourseData;
+      if (res) {
+        return {
+          ...res,
+          id: res.mahp,
+          code: res.mahp,
+          name: res.ten,
+          instructor: res.truong || "Bộ môn phân công",
+          credits: res.tinChiDaoTao || 3,
+          description: res.noiDung || "",
+        } as CourseData;
+      }
     } catch {
       // Fallback
     }
     const found = memoryCourses.find((c) => c.mahp.toUpperCase() === mahp.toUpperCase() && !c.deletedAt);
-    return found || null;
+    if (!found) return null;
+    return {
+      ...found,
+      id: found.mahp,
+      code: found.mahp,
+      name: found.ten,
+      instructor: found.truong || "Bộ môn phân công",
+      credits: found.tinChiDaoTao || 3,
+      description: found.noiDung || "",
+    };
   }
 
   async create(data: CourseData): Promise<CourseData> {

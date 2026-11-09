@@ -17,6 +17,9 @@ import {
   INITIAL_DRL_SUMMARY,
 } from './mock/mockData'
 import { calculateGradeDetail } from '@/lib/score.utils'
+import { getSimulatedLatency, setSimulatedLatency, sleep } from '@/lib/latency'
+
+export { getSimulatedLatency, setSimulatedLatency, sleep }
 
 interface DbSchema {
   courses: Course[]
@@ -33,22 +36,6 @@ let inMemoryDb: DbSchema = {
   grades: [...INITIAL_GRADES],
   activities: [...INITIAL_ACTIVITIES],
   drlSummary: { ...INITIAL_DRL_SUMMARY },
-}
-
-let inMemoryLatency = 400
-
-// Latency management (in-memory)
-export const getSimulatedLatency = (): number => {
-  return inMemoryLatency
-}
-
-export const setSimulatedLatency = (ms: number): void => {
-  inMemoryLatency = ms
-}
-
-export const sleep = (ms = getSimulatedLatency()): Promise<void> => {
-  if (ms <= 0) return Promise.resolve()
-  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 const loadDb = (): DbSchema => {
@@ -257,16 +244,30 @@ export const mockDb = {
     },
   ): GradeRecord => {
     const db = loadDb()
-    const index = db.grades.findIndex((g) => g.id === id)
-    if (index === -1) {
-      throw new Error(`GradeRecord with ID ${id} not found`)
-    }
+    let index = db.grades.findIndex(
+      (g) => g.id === id || g.courseId === id || g.id === `g-${id}` || g.courseCode?.toLowerCase() === id.toLowerCase()
+    )
     const calculated = calculateGradeDetail(
       scores.attendanceScore,
       scores.midtermScore,
       scores.practicalScore,
       scores.finalExamScore,
     )
+    if (index === -1) {
+      const course = db.courses.find((c) => c.id === id || c.code.toLowerCase() === id.toLowerCase())
+      const newGrade: GradeRecord = {
+        id: id.startsWith('g-') ? id : `g-${id}`,
+        courseId: course ? course.id : id,
+        courseName: course?.name,
+        courseCode: course?.code,
+        credits: course?.credits || 3,
+        ...scores,
+        ...calculated,
+      }
+      db.grades.push(newGrade)
+      saveDb(db)
+      return newGrade
+    }
     const updated: GradeRecord = {
       ...db.grades[index],
       ...scores,
@@ -306,7 +307,9 @@ export const mockDb = {
     let evaluatedCredits = 0
 
     db.courses.forEach((c) => {
-      const grade = db.grades.find((g) => g.courseId === c.id)
+      const grade = db.grades.find(
+        (g) => g.courseId === c.id || g.courseId === c.code || g.id === `g-${c.id}` || g.courseCode === c.code
+      )
       if (grade && grade.overallScore > 0) {
         totalScoreWeighted += grade.overallScore * c.credits
         totalGpaWeighted += grade.gpaScore * c.credits
